@@ -208,6 +208,9 @@ export function createMenus(game, root, handlers) {
         slider('Mouse sensitivity', 'sensitivity', 0.3, 2.5, 0.05, () => {
           game.cameraCtl.state.sensitivity = s.sensitivity;
         });
+        choice('Invert mouse Y', 'invertY', [[false, 'Off'], [true, 'On']], () => {
+          game.cameraCtl.state.invertY = s.invertY;
+        });
         choice('Shadows', 'shadows', [[true, 'On'], [false, 'Off']], () => game.gfx.setShadows(s.shadows));
         choice('Traffic', 'trafficDensity', [[0.5, 'Light'], [1, 'Normal'], [1.3, 'Heavy']]);
         choice('Pedestrians', 'pedDensity', [[0.5, 'Few'], [1, 'Normal'], [1.3, 'Crowded']]);

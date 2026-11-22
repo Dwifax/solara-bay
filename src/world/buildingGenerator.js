@@ -47,6 +47,7 @@ export function generateBuildings(blocks, rng) {
     pools: [],
     parks: [],
     neon: [],
+    neonSigns: [],
     houseYards: [],
     signs: [],
   };
@@ -153,7 +154,12 @@ function buildDeco(block, out, palette, h, rng) {
       pushBox(out.plain, cx, cz, w * 0.55, d * 0.55, rng.range(2, 4), 0xfaf7f0, height, false);
       const faceZ = iz === 2 ? 1 : iz === 0 ? -1 : 0;
       const faceX = ix === 2 ? 1 : ix === 0 ? -1 : 0;
-      if (faceZ !== 0 && rng.chance(0.7)) {
+      if (faceZ === 1 && height > 11) {
+        // Hotels on Ocean Drive carry their name in neon on the street front.
+        out.neonSigns.push({ text: HOTEL_NAMES[out.neonSigns.length % HOTEL_NAMES.length], x: cx, y: height - 2.2, z: cz + d / 2 + 0.12, w: Math.min(w - 2, 11), h: 2.2, rotY: 0, color: rng.pick(NEON_SIGN_COLORS) });
+        pushBox(out.plain, cx, cz + d / 2 + 0.3, w * 0.9, 0.35, 0.5, 0xffffff, height * 0.35, false);
+        pushBox(out.plain, cx, cz + d / 2 + 0.3, w * 0.9, 0.35, 0.5, 0xffffff, height * 0.6, false);
+      } else if (faceZ !== 0 && rng.chance(0.7)) {
         pushBox(out.plain, cx, cz + faceZ * (d / 2 + 0.4), 2.2, 0.8, height + 3, 0xffffff, 0, false);
         out.neon.push({ x: cx + rng.range(-w / 4, w / 4), y: height * rng.range(0.55, 0.85), z: cz + faceZ * (d / 2 + 0.25), w: rng.range(5, 9), h: 0.7, axis: 'x', color: rng.pick([0xff4fa0, 0x3ff0ff, 0xffd23f, 0x9d6bff, 0x56ff9b]) });
       } else if (faceX !== 0 && rng.chance(0.5)) {
@@ -181,6 +187,9 @@ function buildMidrise(block, out, palette, h, rng) {
     }
   }
 }
+
+const HOTEL_NAMES = ['HOTEL CORAL', 'SEA BREEZE', 'SUNSET SUITES', 'PALMERA', 'THE TIDE', 'CASA DEL MAR', 'AURORA', 'PELICAN INN', 'NEON PALMS', 'LA PLAYA', 'SOLARA ROYALE', 'MARISOL'];
+const NEON_SIGN_COLORS = ['#ff4fa0', '#3ff0ff', '#ffd23f', '#b98bff', '#56ff9b'];
 
 const ROOF_COLORS = [0xb5573b, 0xa4472f, 0x6f6a66, 0xc4693e, 0x8a4a3a];
 

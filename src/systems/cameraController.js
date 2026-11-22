@@ -25,7 +25,7 @@ export function createCameraController(camera, collision) {
   function look(dx, dy) {
     const s = 0.0024 * state.sensitivity;
     state.yaw -= dx * s;
-    state.pitch = clamp(state.pitch + dy * s, -0.55, 1.2);
+    state.pitch = clamp(state.pitch + dy * s * (state.invertY ? -1 : 1), -0.55, 1.2);
     if (Math.abs(dx) + Math.abs(dy) > 0.5) state.idleTime = 0;
   }
 
