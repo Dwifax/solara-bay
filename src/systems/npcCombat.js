@@ -78,9 +78,9 @@ export function createNpcCombat(game) {
       game.effects.tracer(hand.x, hand.y, hand.z, ex, ey, ez);
       if (target === game.player) {
         if (game.player.vehicle) {
-          game.player.vehicle.damage(damage * 2, events, null);
+          game.player.vehicle.damage(damage * 0.9, events, null);
           game.effects.impactSparks(ex, ey, ez);
-          if (rng.chance(0.3)) game.player.takeDamage(damage * 0.5);
+          if (rng.chance(0.25)) game.player.takeDamage(damage * 0.4);
         } else {
           game.effects.blood(ex, ey, ez);
           game.player.takeDamage(damage);

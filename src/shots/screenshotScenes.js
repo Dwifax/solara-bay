@@ -41,7 +41,7 @@ function chase(game, stepDt) {
   game.player.selectWeapon('smg');
   game.player.armor = 60;
   game.player.health = 78;
-  game.tod.state.hour = 19.05;
+  game.tod.state.hour = Number(new URLSearchParams(location.search).get('hour') ?? 19.3);
   const car = game.vehicleSystem.spawn('vento', 30, 298.1, -Math.PI / 2, 0xffd400);
   game.controller.enterVehicle(car);
   car.vx = -28;
@@ -202,6 +202,7 @@ function mapScreen(game) {
 function title(game) {
   game.flow.showTitle();
   game.tod.state.hour = 18.75;
+  game.flow.setTitleTime(Number(new URLSearchParams(location.search).get('t') ?? 9));
 }
 
 const SCENES = { chase, onfoot: onFoot, shootout, map: mapScreen, title };

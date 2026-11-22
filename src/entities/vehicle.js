@@ -174,7 +174,7 @@ export class Vehicle {
         // A glancing hit at the front turns the car away from the wall.
         this.yawRate += (k === 0 ? 1 : -1) * (res.nx * fz - res.nz * fx) * impact * 0.05;
         if (impact > 5) {
-          this.damage((impact - 5) * (impact - 5) * 0.75, events, this.driver === 'player' ? 'player-crash' : null);
+          this.damage((impact - 6) * (impact - 6) * 0.45, events, this.driver === 'player' ? 'player-crash' : null);
           events.emit('vehicleImpact', { vehicle: this, impact, x: circle.x, z: circle.z });
         }
       }

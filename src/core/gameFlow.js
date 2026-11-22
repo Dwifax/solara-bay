@@ -136,6 +136,10 @@ export function createGameFlow(game) {
       game.tod.state.hour = 18.7;
       titleTime = 0;
     },
+    /** Jump the title flight to a moment (seconds along the path). */
+    setTitleTime(t) {
+      titleTime = t;
+    },
     /** Cinematic camera for the title screen. */
     titleCamera(dt) {
       titleTime += dt;
