@@ -1,13 +1,15 @@
-// Solara Bay: an open-world crime game built for the make.fun gta6-01 bounty.
-// This entry hands in the game from the game/ directory as plain static files
-// that load offline in a desktop browser (game/index.html and its ES modules,
-// with no network requests at runtime). The program copies game/ and screenshots/
-// to /output and writes /output/dossier.json with the make.fun library.
+// Solara Bay: an original 3D open-world crime game for the make.fun gta6-01 bounty.
+// The game is game/: plain static files (index.html, ES modules under src/, CSS, and three.js
+// vendored as game/vendor/three.module.min.js through an import map) that run offline in
+// desktop Chrome with no network request. This program hands it in: it copies game/ and
+// screenshots/ to /output and writes /output/dossier.json with the make.fun library.
 //
-// Game features: procedural city generation, player on foot and in vehicles,
-// traffic and pedestrian AI, police with wanted level escalation, 8 story missions,
-// combat system, HUD with minimap, save/load, and WebAudio synthesis.
-// Built with Canvas 2D and custom game engine.
+// What is in game/src: a seeded city generator (districts, street grid, bridges, beach, docks,
+// hills, landmarks), a third-person player and arcade-physics cars, traffic and pedestrian AI,
+// a 1-5 star wanted system with pursuit cars, roadblocks and a helicopter, guns and fists,
+// nine story missions plus street races, courier jobs and collectibles, shops and respect
+// levels, a rotating radar and full map, menus with save slots, and WebAudio sound with a
+// procedurally composed three-station radio.
 //
 // Serve it locally with `node serve.ts`, then open http://localhost:8080.
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:

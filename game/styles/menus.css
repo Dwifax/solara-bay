@@ -42,7 +42,7 @@
 .stat b { color: #fff; }
 
 .map-screen { position: absolute; inset: 0; background: #0b2233; pointer-events: auto; }
-.map-screen canvas { position: absolute; inset: 0; cursor: crosshair; }
+.map-screen > canvas { position: absolute; inset: 0; cursor: crosshair; }
 .map-legend { position: absolute; right: 18px; top: 18px; width: 230px; background: rgba(10,12,24,0.82); padding: 14px 16px; border-radius: 4px; border-top: 3px solid #ffd23f; font-size: 14px; color: #ddd; }
 .map-legend h2 { margin: 0 0 6px; font-family: 'Impact', 'Arial Black', sans-serif; font-weight: normal; letter-spacing: 3px; color: #ffd27a; font-size: 26px; }
 .map-legend ul { list-style: none; padding: 0; margin: 8px 0; }
