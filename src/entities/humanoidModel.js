@@ -1,8 +1,9 @@
-// People built from boxes: a body (torso, head, hair, optional cap) and four limbs on pivots, with
-// walk/run cycles, an aiming pose, a punch, sitting and a fall when killed. Geometries are cached
-// per outfit so a crowd of identical outfits shares buffers.
+// People built from rounded primitives: a tapered torso and hips, neck, a rounded head with a
+// face and one of several hair styles (or a cap), and four capsule limbs on pivots with hands and
+// shoes, animated with walk/run cycles, an aiming pose, a punch, sitting and a fall when killed.
+// Geometries are cached per outfit so a crowd of identical outfits shares buffers.
 import * as THREE from 'three';
-import { box, mergeGeometries } from '../render/geometryUtils.js';
+import { box, mergeGeometries, paint } from '../render/geometryUtils.js';
 import { vertexColorMaterial } from '../render/cityMaterials.js';
 
 const geometryCache = new Map();
@@ -17,33 +18,86 @@ export const HAIR_COLORS = [0x1c1410, 0x3b2616, 0x6b4423, 0xb98b4e, 0x111111, 0x
 export const SHIRT_COLORS = [0xffffff, 0xf26d5b, 0x3e92cc, 0xffc857, 0x2a9d8f, 0xe76f9a, 0x9b5de5, 0x00bbf9, 0xf4a261, 0x80ed99, 0x222222];
 export const PANTS_COLORS = [0x2b3a55, 0x3d3d3d, 0xc9b38a, 0x5a6d7c, 0x1d1d1d, 0xe9e2d0, 0x6b4f3a];
 
+/** A vertical capsule of radius r and total length len, top at y = 0 hanging down. */
+function capsule(r, len, color, y = 0, sx = 1, sz = 1) {
+  const g = paint(new THREE.CapsuleGeometry(r, Math.max(0.01, len - r * 2), 3, 8), color);
+  g.scale(sx, 1, sz);
+  g.translate(0, y - len / 2, 0);
+  return g;
+}
+
+/** A tapered oval section (torso / hips) between y0 and y1. */
+function oval(rTop, rBottom, y0, y1, depth, color) {
+  const g = paint(new THREE.CylinderGeometry(rTop, rBottom, y1 - y0, 10, 1), color);
+  g.scale(1, 1, depth);
+  g.translate(0, (y0 + y1) / 2, 0);
+  return g;
+}
+
+function sphere(r, color, x, y, z, sx = 1, sy = 1, sz = 1) {
+  const g = paint(new THREE.SphereGeometry(r, 12, 9), color);
+  g.scale(sx, sy, sz);
+  g.translate(x, y, z);
+  return g;
+}
+
+function hairParts(o) {
+  const parts = [];
+  if (o.cap) {
+    parts.push(sphere(0.145, o.cap, 0, 1.87, -0.005, 1.02, 0.62, 1.05));
+    parts.push(box(0.22, 0.025, 0.14, o.cap, 0, 1.86, 0.15));
+    if (o.hairStyle === 'long') parts.push(box(0.2, 0.26, 0.06, o.hair, 0, 1.66, -0.12));
+    return parts;
+  }
+  if (o.hairStyle === 'bald') return parts;
+  parts.push(sphere(0.15, o.hair, 0, 1.84, -0.015, 1.0, 0.78, 1.04));
+  if (o.hairStyle === 'long') {
+    parts.push(box(0.26, 0.34, 0.08, o.hair, 0, 1.66, -0.1));
+    parts.push(sphere(0.06, o.hair, 0, 1.58, -0.15, 1, 1.8, 1));
+  } else if (o.hairStyle === 'bun') {
+    parts.push(sphere(0.075, o.hair, 0, 1.92, -0.1));
+  } else if (o.hairStyle === 'mohawk') {
+    parts.push(box(0.05, 0.12, 0.26, o.hair, 0, 1.95, 0));
+  }
+  return parts;
+}
+
 /**
- * Build a person. outfit: { skin, hair, shirt, pants, shoes, cap, vest, hairStyle: 'short'|'long'|'bald' }.
+ * Build a person. outfit: { skin, hair, shirt, pants, shoes, cap, vest, jacket,
+ * hairStyle: 'short' | 'long' | 'bun' | 'mohawk' | 'bald' }.
  */
 export function createHumanoid(outfit) {
   const o = { shoes: 0x222222, hairStyle: 'short', ...outfit };
-  const key = `${o.skin}-${o.hair}-${o.shirt}-${o.pants}-${o.shoes}-${o.cap ?? 'n'}-${o.vest ?? 'n'}-${o.hairStyle}`;
+  const key = `${o.skin}-${o.hair}-${o.shirt}-${o.pants}-${o.shoes}-${o.cap ?? 'n'}-${o.vest ?? 'n'}-${o.jacket ?? 'n'}-${o.hairStyle}`;
   const body = cached(`body-${key}`, () => {
     const parts = [
-      box(0.5, 0.62, 0.28, o.shirt, 0, 1.24, 0),
-      box(0.46, 0.16, 0.26, o.pants, 0, 0.88, 0),
-      box(0.12, 0.1, 0.12, o.skin, 0, 1.6, 0),
-      box(0.24, 0.27, 0.25, o.skin, 0, 1.77, 0),
-      box(0.05, 0.03, 0.02, 0x222222, -0.06, 1.8, 0.13),
-      box(0.05, 0.03, 0.02, 0x222222, 0.06, 1.8, 0.13),
+      oval(0.25, 0.19, 1.05, 1.5, 0.62, o.jacket ?? o.shirt),
+      oval(0.2, 0.2, 0.88, 1.06, 0.66, o.pants),
+      sphere(0.25, o.jacket ?? o.shirt, 0, 1.47, 0, 1, 0.32, 0.6),
+      oval(0.055, 0.06, 1.5, 1.64, 1, o.skin),
+      sphere(0.125, o.skin, 0, 1.76, 0, 1, 1.13, 1.05),
+      box(0.03, 0.05, 0.04, o.skin, 0, 1.74, 0.135),
+      box(0.04, 0.022, 0.01, 0x1a1a1a, -0.045, 1.785, 0.122),
+      box(0.04, 0.022, 0.01, 0x1a1a1a, 0.045, 1.785, 0.122),
+      box(0.05, 0.012, 0.01, 0x7a3b33, 0, 1.69, 0.121),
+      box(0.4, 0.04, 0.27, 0x2a2420, 0, 1.06, 0),
+      ...hairParts(o),
     ];
-    if (o.hairStyle !== 'bald') parts.push(box(0.26, 0.09, 0.27, o.hair, 0, 1.92, -0.01));
-    if (o.hairStyle === 'long') parts.push(box(0.26, 0.3, 0.07, o.hair, 0, 1.74, -0.13));
-    if (o.hairStyle !== 'bald') parts.push(box(0.26, 0.14, 0.05, o.hair, 0, 1.84, -0.12));
-    if (o.cap) {
-      parts.push(box(0.27, 0.08, 0.28, o.cap, 0, 1.95, 0));
-      parts.push(box(0.24, 0.03, 0.14, o.cap, 0, 1.92, 0.18));
-    }
-    if (o.vest) parts.push(box(0.52, 0.42, 0.3, o.vest, 0, 1.3, 0));
+    if (o.jacket) parts.push(oval(0.15, 0.13, 1.1, 1.48, 0.62, o.shirt).translate(0, 0, 0.055));
+    if (o.vest) parts.push(oval(0.27, 0.23, 1.12, 1.48, 0.68, o.vest));
     return mergeGeometries(parts);
   });
-  const arm = cached(`arm-${o.shirt}-${o.skin}`, () => mergeGeometries([box(0.13, 0.3, 0.14, o.shirt, 0, -0.14, 0), box(0.11, 0.3, 0.12, o.skin, 0, -0.43, 0), box(0.11, 0.1, 0.12, o.skin, 0, -0.62, 0.01)]));
-  const leg = cached(`leg-${o.pants}-${o.shoes}`, () => mergeGeometries([box(0.17, 0.82, 0.18, o.pants, 0, -0.42, 0), box(0.17, 0.1, 0.28, o.shoes, 0, -0.86, 0.05)]));
+  const sleeve = o.jacket ?? o.shirt;
+  const arm = cached(`arm-${sleeve}-${o.skin}-${o.jacket ? 'j' : 's'}`, () => mergeGeometries([
+    capsule(0.068, o.jacket ? 0.56 : 0.3, sleeve, 0.04),
+    capsule(0.056, 0.36, o.skin, o.jacket ? -0.48 : -0.24),
+    sphere(0.055, o.skin, 0, -0.62, 0.01, 0.9, 1.1, 1),
+  ]));
+  const leg = cached(`leg-${o.pants}-${o.shoes}`, () => mergeGeometries([
+    capsule(0.088, 0.5, o.pants, 0.02),
+    capsule(0.074, 0.42, o.pants, -0.42),
+    box(0.13, 0.09, 0.27, o.shoes, 0, -0.86, 0.05),
+  ]));
 
   const group = new THREE.Group();
   const root = new THREE.Group();
@@ -60,12 +114,12 @@ export function createHumanoid(outfit) {
     root.add(pivot);
     return pivot;
   }
-  const armL = limb(arm, -0.32, 1.5);
-  const armR = limb(arm, 0.32, 1.5);
-  const legL = limb(leg, -0.12, 0.9);
-  const legR = limb(leg, 0.12, 0.9);
+  const armL = limb(arm, -0.29, 1.47);
+  const armR = limb(arm, 0.29, 1.47);
+  const legL = limb(leg, -0.1, 0.9);
+  const legR = limb(leg, 0.1, 0.9);
   const hand = new THREE.Group();
-  hand.position.set(0, -0.64, 0.05);
+  hand.position.set(0, -0.62, 0.04);
   armR.add(hand);
   return { group, root, armL, armR, legL, legR, hand, phase: 0, punch: 0 };
 }

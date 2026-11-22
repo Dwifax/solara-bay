@@ -12,7 +12,7 @@ const SPRINT = 8.6;
 const GRAVITY = 18;
 const RADIUS = 0.35;
 
-export const PLAYER_OUTFIT = { skin: 0xc68a5e, hair: 0x1c1410, shirt: 0xe9576b, pants: 0x2b3a55, shoes: 0xf4f4f4, hairStyle: 'long' };
+export const PLAYER_OUTFIT = { skin: 0xc68a5e, hair: 0x1c1410, shirt: 0xf6f1e7, jacket: 0xf05a6b, pants: 0x34507e, shoes: 0xf4f4f4, hairStyle: 'long' };
 
 export class Player {
   constructor(x, z) {
