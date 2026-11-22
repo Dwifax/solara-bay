@@ -153,6 +153,7 @@ export function createMissionSystem(game) {
     run.ctx = makeContext(run);
     if (giverPed) {
       run.peds.push(giverPed);
+      if (!game.player.vehicle) run.cutsceneWith = giverPed;
       giverPed = null;
     }
     game.ui?.banner(mission.title.toUpperCase(), mission.side ? mission.kind ?? 'SIDE JOB' : 'STORY MISSION', 3.2, 'mission');
@@ -197,11 +198,14 @@ export function createMissionSystem(game) {
     run.step = run.mission.steps[run.stepIndex];
     run.state = {};
     run.timeLeft = run.step.timeLimit ?? null;
+    // The opening conversation plays as a short cutscene when the giver is there in person.
+    game.cutscene = run.stepIndex === 0 && run.step.type === 'dialogue' && run.cutsceneWith ? { other: run.cutsceneWith, time: 0 } : null;
     STEP_HANDLERS[run.step.type].start(run.ctx, run.step, run.state);
   }
 
   function cleanup(keepVehicles) {
     clearStepVisuals();
+    game.cutscene = null;
     for (const p of run.peds) {
       if (p.inVehicle && p.inVehicle.passenger === p) p.inVehicle.passenger = null;
       p.missionTag = null;

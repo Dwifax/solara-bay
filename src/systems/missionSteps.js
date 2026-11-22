@@ -27,6 +27,7 @@ export const STEP_HANDLERS = {
       });
     },
     update(ctx, step, s) {
+      if (s.done && ctx.game.cutscene) ctx.game.cutscene = null;
       return s.done ? 'done' : null;
     },
   },

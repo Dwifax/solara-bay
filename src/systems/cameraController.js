@@ -107,10 +107,44 @@ export function createCameraController(camera, collision) {
     camera.lookAt(lookAt);
   }
 
+  /** Over-the-shoulder two-shot of the player and another person, slowly drifting. */
+  function conversation(dt, player, other, time) {
+    const ax = player.position.x;
+    const az = player.position.z;
+    const bx = other.position.x;
+    const bz = other.position.z;
+    const mx = (ax + bx) / 2;
+    const mz = (az + bz) / 2;
+    const dx = bx - ax;
+    const dz = bz - az;
+    const len = Math.hypot(dx, dz) || 1;
+    // Stand to one side of the line between them, a little behind the player.
+    const sx = -dz / len;
+    const sz = dx / len;
+    const swing = Math.sin(time * 0.25) * 0.5;
+    const dist = 4.6;
+    desired.set(mx + sx * dist - (dx / len) * (0.7 + swing), player.position.y + 1.7, mz + sz * dist - (dz / len) * (0.7 + swing));
+    const probe = collision.raycast(mx, 1.6, mz, sx, 0, sz, dist + 0.5);
+    if (probe !== Infinity) {
+      // A wall on that side: film from the other side instead.
+      desired.set(mx - sx * dist - (dx / len) * 0.7, player.position.y + 1.7, mz - sz * dist - (dz / len) * 0.7);
+    }
+    state.position.lerp(desired, damp(3, dt));
+    camera.position.copy(state.position);
+    lookAt.set(mx, player.position.y + 1.45, mz);
+    camera.lookAt(lookAt);
+    if (camera.fov !== 50) {
+      camera.fov = 50;
+      camera.updateProjectionMatrix();
+    }
+    state.fov = 50;
+  }
+
   return {
     state,
     look,
     update,
+    conversation,
     forwardYaw,
     shake(amount) {
       state.shake = Math.min(1.2, state.shake + amount);
