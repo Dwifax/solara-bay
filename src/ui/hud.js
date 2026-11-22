@@ -74,6 +74,13 @@ export function createHud(game, root, baseMap) {
   const race = el('div', 'race hidden', hud);
 
   const crosshair = el('div', 'crosshair hidden', hud, '<i></i><i></i><i></i><i></i>');
+  const hitMarker = el('div', 'hitmarker', hud, '<i></i><i></i><i></i><i></i>');
+  let hitTimer = 0;
+  game.events.on('bulletHitPed', ({ attacker, ped }) => {
+    if (attacker !== 'player') return;
+    hitTimer = 0.18;
+    hitMarker.classList.toggle('kill', ped.dead);
+  });
   const vignette = el('div', 'vignette', root);
   const dialogue = createDialogue(game, el('div', 'subtitles', hud));
 
@@ -233,6 +240,8 @@ export function createHud(game, root, baseMap) {
       const armed = !p.vehicle && p.current !== 'fists' && !p.dead;
       crosshair.classList.toggle('hidden', !(armed || (p.vehicle && p.aiming)));
       crosshair.classList.toggle('aim', p.aiming);
+      hitTimer = Math.max(0, hitTimer - dt);
+      hitMarker.style.opacity = hitTimer > 0 ? '1' : '0';
       // District popup.
       const d = game.district;
       if (d && d !== lastDistrict) {

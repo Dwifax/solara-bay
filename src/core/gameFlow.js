@@ -72,6 +72,7 @@ export function createGameFlow(game) {
       game.missions.load({ completed: [] });
       game.activities.load({});
       for (const k of Object.keys(game.stats)) game.stats[k] = 0;
+      game.hints.reset();
       const p = game.player;
       p.weapons = { fists: { mag: 0, reserve: 0 } };
       p.selectWeapon('fists');

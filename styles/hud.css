@@ -106,3 +106,10 @@
 .wheel-slot.sel { background: rgba(255,210,63,0.25); color: #fff; box-shadow: 0 0 0 2px #ffd23f inset; }
 .wheel-slot.locked { opacity: 0.25; }
 .wheel-center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 15px; text-align: center; width: 110px; }
+.hitmarker { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; transform: translate(-50%, -50%) rotate(45deg); opacity: 0; transition: opacity 0.05s; }
+.hitmarker i { position: absolute; background: #fff; box-shadow: 0 0 3px #000; }
+.hitmarker i:nth-child(1) { left: 12px; top: 0; width: 2px; height: 8px; }
+.hitmarker i:nth-child(2) { left: 12px; bottom: 0; width: 2px; height: 8px; }
+.hitmarker i:nth-child(3) { top: 12px; left: 0; width: 8px; height: 2px; }
+.hitmarker i:nth-child(4) { top: 12px; right: 0; width: 8px; height: 2px; }
+.hitmarker.kill i { background: #ff4a3d; }
