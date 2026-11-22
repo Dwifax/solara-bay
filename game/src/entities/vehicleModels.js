@@ -50,7 +50,10 @@ const STYLES = {
   },
   police: (s, c) => {
     const m = sedanLike(s.length, s.width, c);
-    m.body.push(box(s.width + 0.03, 0.42, s.length * 0.42, 0xf4f4f4, 0, 0.62, -0.1));
+    m.body.push(box(s.width + 0.03, 0.16, s.length * 0.98, 0x1d4ed8, 0, 0.72, 0));
+    m.body.push(box(s.width - 0.06, 0.06, s.length * 0.28, 0x111827, 0, 0.93, s.length * 0.33));
+    m.body.push(box(s.width + 0.02, 0.3, 0.55, 0x111827, 0, 0.5, s.length / 2 - 0.3));
+    m.body.push(box(s.width + 0.02, 0.3, 0.55, 0x111827, 0, 0.5, -s.length / 2 + 0.3));
     m.body.push(box(s.width * 0.8, 0.35, 0.12, 0x222222, 0, 0.5, s.length / 2 + 0.12));
     m.body.push(box(1.1, 0.08, 0.3, 0x222222, 0, m.roofY + 0.06, -0.2));
     m.siren = true;
@@ -128,7 +131,7 @@ const sirenRed = new THREE.MeshBasicMaterial({ color: 0xff2030 });
 const sirenBlue = new THREE.MeshBasicMaterial({ color: 0x2050ff });
 const sirenDim = new THREE.MeshBasicMaterial({ color: 0x331a22 });
 const wheelMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
-const beamMaterial = createNightGlowMaterial(0xfff0c8, { additive: true, opacity: 0.16 });
+const beamMaterial = createNightGlowMaterial(0xfff0c8, { additive: true, opacity: 0.08 });
 
 function wheelGeometry(r) {
   const key = `wheel-${r}`;

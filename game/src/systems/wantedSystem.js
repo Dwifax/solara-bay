@@ -93,7 +93,7 @@ export function createWantedSystem(game) {
     const p = ped.position;
     if (ped.role === 'cop') report('copMurder', p.x, p.z, true);
     else if (ped.role === 'civilian') report('murder', p.x, p.z);
-    else if (ped.role === 'gang' || ped.role === 'guard') report('gunfire', p.x, p.z);
+    else if ((ped.role === 'gang' || ped.role === 'guard') && !game.missions.suppressGunfireCrime()) report('gunfire', p.x, p.z);
   });
   events.on('pedHurt', ({ ped, attacker }) => {
     if (attacker !== 'player') return;

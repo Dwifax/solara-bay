@@ -10,7 +10,7 @@ export function startGameLoop(step, render) {
   let running = true;
   function frame(now) {
     if (!running) return;
-    const elapsed = Math.min(MAX_FRAME, (now - last) / 1000);
+    const elapsed = Math.max(0, Math.min(MAX_FRAME, (now - last) / 1000));
     last = now;
     accumulator += elapsed;
     let steps = 0;

@@ -9,7 +9,7 @@ export const VEHICLES = {
   coaster: { id: 'coaster', name: 'Coaster Van', model: 'van', length: 5.4, width: 2.15, maxSpeed: 34, accel: 7, brake: 16, grip: 6.2, steer: 0.55, health: 1500, mass: 1.6, price: 12000, level: 1, colors: [0xf1f1f1, 0x457b9d, 0xe9d8a6, 0x94a3b8] },
   pip: { id: 'pip', name: 'Pip Hatch', model: 'compact', length: 3.8, width: 1.75, maxSpeed: 38, accel: 10, brake: 22, grip: 8, steer: 0.7, health: 750, mass: 0.8, price: 6000, level: 1, colors: [0x90be6d, 0xf9c74f, 0xf94144, 0x43aa8b, 0xf8961e, 0x577590] },
   cab: { id: 'cab', name: 'Bay Cab', model: 'taxi', length: 4.6, width: 1.9, maxSpeed: 42, accel: 10, brake: 22, grip: 7.5, steer: 0.62, health: 1000, mass: 1.0, price: 0, level: 99, colors: [0xffc300] },
-  interceptor: { id: 'interceptor', name: 'SBPD Interceptor', model: 'police', length: 4.8, width: 1.95, maxSpeed: 54, accel: 14, brake: 26, grip: 8.5, steer: 0.6, health: 1400, mass: 1.2, price: 0, level: 99, colors: [0x111827] },
+  interceptor: { id: 'interceptor', name: 'SBPD Interceptor', model: 'police', length: 4.8, width: 1.95, maxSpeed: 54, accel: 14, brake: 26, grip: 8.5, steer: 0.6, health: 1400, mass: 1.2, price: 0, level: 99, colors: [0xf4f6f8] },
   reefer: { id: 'reefer', name: 'Reefer Truck', model: 'truck', length: 6.6, width: 2.3, maxSpeed: 30, accel: 6, brake: 14, grip: 6, steer: 0.5, health: 2000, mass: 2.0, price: 0, level: 99, colors: [0xf4f4f4] },
 };
 

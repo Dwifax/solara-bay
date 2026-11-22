@@ -107,7 +107,15 @@ export function createNpcCombat(game) {
     if (!target) {
       ped.aim = Math.max(0, ped.aim - dt * 3);
       if (ped.role === 'ally') {
-        followPlayer(ped, dt);
+        if (ped.ai.post) {
+          const d = ped.moveToward(ped.ai.post.x, ped.ai.post.z, 1.4, dt, collision);
+          if (d < 0.6) {
+            ped.speed = 0;
+            const p = game.player.position;
+            if (dist2d(p.x, p.z, ped.position.x, ped.position.z) < 12) ped.faceToward(p.x, p.z, dt);
+            else if (ped.ai.idleFace) ped.faceToward(ped.ai.idleFace.x, ped.ai.idleFace.z, dt);
+          }
+        } else followPlayer(ped, dt);
         return;
       }
       if (ped.ai.post) {
