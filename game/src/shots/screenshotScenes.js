@@ -106,8 +106,8 @@ function onFoot(game, stepDt) {
   for (let i = 0; i < 40; i += 1) game.pedSystem.spawnCivilianNear(p.position);
   // A few walkers right along this sidewalk.
   const rng = createRandom(7);
-  for (let i = 0; i < 8; i += 1) {
-    const ped = game.pedSystem.spawnPed('civilian', -330 + i * 7 + rng.range(-2, 2), 290 + rng.range(-1.5, 1.5));
+  for (let i = 0; i < 9; i += 1) {
+    const ped = game.pedSystem.spawnPed('civilian', -292 + i * 8 + rng.range(-2, 2), 290 + rng.range(-1.5, 1.5));
     game.pedSystem.startWalking(ped);
   }
   const juno = game.vehicleSystem.spawn('vento', -318, 305.2, Math.PI / 2, 0xff9cf2);
@@ -116,10 +116,10 @@ function onFoot(game, stepDt) {
   game.missions.forceStart('wheelwoman');
   game.ui.hud.clearMessages();
   simulate(game, 40, stepDt);
-  p.position.set(-294, 0.18, 291.2);
-  p.heading = -Math.PI / 2 + 0.25;
-  game.cameraCtl.state.yaw = -Math.PI / 2 - 0.55;
-  game.cameraCtl.state.pitch = 0.12;
+  p.position.set(-302.2, 0.18, 291.2);
+  p.heading = 1.85;
+  game.cameraCtl.state.yaw = Math.PI / 2 - 0.32;
+  game.cameraCtl.state.pitch = 0.08;
   game.ui.dialogue.hold({ who: 'juno', text: 'Ocean Drive, up through Little Coral, back down to the beach. Loser buys the tacos.' });
   game.ui.setObjective('Meet ~Juno~ at the start line on Ocean Drive.');
   simulate(game, 12, stepDt);
@@ -154,11 +154,11 @@ function shootout(game, stepDt) {
   // Keep the gang on the road in front of the player.
   const gang = game.peds.filter((e) => e.role === 'gang');
   const spots = [
-    [530, -193.5],
-    [537, -198.5],
-    [545, -191.5],
-    [556, -196.5],
-    [568, -190.5],
+    [523, -194.5],
+    [529, -198.8],
+    [534, -191.8],
+    [541, -196.2],
+    [552, -192.5],
   ];
   gang.forEach((g, i) => {
     const [x, z] = spots[i % spots.length];
