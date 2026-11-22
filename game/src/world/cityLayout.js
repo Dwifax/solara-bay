@@ -1,0 +1,167 @@
+// The fixed plan of Solara Bay: a 100 m street grid on the mainland, the Port Calloway docks
+// island across the channel, two bridges, the beach and the sea. Everything else (buildings,
+// props, traffic) is generated on top of this plan from a seed.
+
+export const BLOCK = 100;
+export const ROAD_HALF = 7;
+export const SIDEWALK_OUTER = 11;
+export const LANE_INNER = 1.75;
+export const LANE_OUTER = 5.25;
+export const WATER_LEVEL = -1.6;
+
+export const MAINLAND = { minI: -5, maxI: 3, minJ: -5, maxJ: 3 };
+export const DOCKS = { minI: 5, maxI: 6, minJ: -3, maxJ: 2 };
+export const BRIDGE_ROWS = [-1, 2];
+export const CHANNEL = { minX: 352, maxX: 448 };
+export const DOCKS_LAND = { minX: 448, maxX: 685, minZ: -352, maxZ: 262 };
+export const MAINLAND_LAND = { minX: -560, maxX: 352, minZ: -600, maxZ: 312 };
+export const BEACH = { minZ: 312, shoreZ: 392, seaZ: 440 };
+export const WORLD_BOUNDS = { minX: -535, maxX: 700, minZ: -535, maxZ: 470 };
+export const PIER = { minX: -160, maxX: -136, minZ: 312, maxZ: 465 };
+
+export function nodeKey(i, j) {
+  return `${i},${j}`;
+}
+
+function nodeExists(i, j) {
+  const main = i >= MAINLAND.minI && i <= MAINLAND.maxI && j >= MAINLAND.minJ && j <= MAINLAND.maxJ;
+  const docks = i >= DOCKS.minI && i <= DOCKS.maxI && j >= DOCKS.minJ && j <= DOCKS.maxJ;
+  return main || docks;
+}
+
+/** The street graph: intersections (nodes) joined by straight road segments (edges). */
+export function createRoadNetwork() {
+  const nodes = new Map();
+  const nodeList = [];
+  const edges = [];
+  for (let i = MAINLAND.minI; i <= DOCKS.maxI; i += 1) {
+    for (let j = MAINLAND.minJ; j <= MAINLAND.maxJ; j += 1) {
+      if (!nodeExists(i, j)) continue;
+      const node = { id: nodeList.length, key: nodeKey(i, j), i, j, x: i * BLOCK, z: j * BLOCK, edges: [], neighbors: [] };
+      nodes.set(node.key, node);
+      nodeList.push(node);
+    }
+  }
+  function connect(a, b, bridge) {
+    const dx = b.x - a.x;
+    const dz = b.z - a.z;
+    const length = Math.hypot(dx, dz);
+    const edge = { id: edges.length, a, b, length, dirX: dx / length, dirZ: dz / length, bridge, horizontal: Math.abs(dx) > Math.abs(dz) };
+    edges.push(edge);
+    a.edges.push(edge);
+    b.edges.push(edge);
+    a.neighbors.push(b);
+    b.neighbors.push(a);
+  }
+  for (const node of nodeList) {
+    const east = nodes.get(nodeKey(node.i + 1, node.j));
+    const south = nodes.get(nodeKey(node.i, node.j + 1));
+    if (east) connect(node, east, false);
+    if (south) connect(node, south, false);
+  }
+  for (const j of BRIDGE_ROWS) connect(nodes.get(nodeKey(MAINLAND.maxI, j)), nodes.get(nodeKey(DOCKS.minI, j)), true);
+  return { nodes, nodeList, edges };
+}
+
+/** Nearest intersection to a point. */
+export function nearestNode(network, x, z) {
+  let best = null;
+  let bestD = Infinity;
+  for (const node of network.nodeList) {
+    const d = (node.x - x) ** 2 + (node.z - z) ** 2;
+    if (d < bestD) {
+      bestD = d;
+      best = node;
+    }
+  }
+  return best;
+}
+
+/** Closest point on the road graph (centre lines) to (x, z), with the edge and the distance. */
+export function nearestRoadPoint(network, x, z) {
+  let best = null;
+  for (const edge of network.edges) {
+    const t = Math.max(0, Math.min(edge.length, (x - edge.a.x) * edge.dirX + (z - edge.a.z) * edge.dirZ));
+    const px = edge.a.x + edge.dirX * t;
+    const pz = edge.a.z + edge.dirZ * t;
+    const d = Math.hypot(px - x, pz - z);
+    if (!best || d < best.distance) best = { edge, t, x: px, z: pz, distance: d };
+  }
+  return best;
+}
+
+/** True where a point lies on a road surface (including bridges). */
+export function isOnRoad(network, x, z) {
+  const near = nearestRoadPoint(network, x, z);
+  return near.distance <= ROAD_HALF;
+}
+
+function inRect(x, z, r) {
+  return x >= r.minX && x <= r.maxX && z >= r.minZ && z <= r.maxZ;
+}
+
+/** True over a bridge deck. */
+export function onBridgeDeck(x, z) {
+  if (x < CHANNEL.minX - 2 || x > CHANNEL.maxX + 2) return false;
+  for (const j of BRIDGE_ROWS) if (Math.abs(z - j * BLOCK) <= ROAD_HALF + 2.5) return true;
+  return false;
+}
+
+/** Height of the walkable/drivable surface: land at 0, the beach sloping into the sea, water below. */
+export function groundHeight(x, z) {
+  if (onBridgeDeck(x, z)) return 0;
+  if (inRect(x, z, DOCKS_LAND)) return 0;
+  if (inRect(x, z, PIER)) return 0.4;
+  if (x >= CHANNEL.minX && x <= CHANNEL.maxX) return -6;
+  if (x > DOCKS_LAND.maxX) return -6;
+  if (z > BEACH.minZ && x < CHANNEL.minX) {
+    if (z < BEACH.shoreZ) return -((z - BEACH.minZ) / (BEACH.shoreZ - BEACH.minZ)) * 1.2;
+    return -1.2 - Math.min(5, (z - BEACH.shoreZ) * 0.1);
+  }
+  return 0;
+}
+
+/** 1 on a raised block slab (sidewalks and lots), 0 on streets and open ground. */
+export function onBlockSlab(x, z) {
+  const lx = ((x % BLOCK) + BLOCK) % BLOCK;
+  const lz = ((z % BLOCK) + BLOCK) % BLOCK;
+  if (lx <= ROAD_HALF || lx >= BLOCK - ROAD_HALF || lz <= ROAD_HALF || lz >= BLOCK - ROAD_HALF) return 0;
+  const bi = Math.floor(x / BLOCK);
+  const bj = Math.floor(z / BLOCK);
+  const mainland = bi >= MAINLAND.minI && bi < MAINLAND.maxI && bj >= MAINLAND.minJ && bj < MAINLAND.maxJ;
+  const docks = bi === DOCKS.minI && bj >= DOCKS.minJ && bj < DOCKS.maxJ;
+  return mainland || docks ? 1 : 0;
+}
+
+/** Height of what stands under (x, z): ground plus the 18 cm sidewalk slab where there is one. */
+export function surfaceHeight(x, z) {
+  return groundHeight(x, z) + onBlockSlab(x, z) * 0.18;
+}
+
+/** True where the surface is under the sea. */
+export function isWater(x, z) {
+  return groundHeight(x, z) < WATER_LEVEL - 0.2;
+}
+
+/** Every city block (the land between four streets) with its grid index and lot rectangle. */
+export function listBlocks() {
+  const blocks = [];
+  for (let bi = MAINLAND.minI; bi < MAINLAND.maxI; bi += 1) {
+    for (let bj = MAINLAND.minJ; bj < MAINLAND.maxJ; bj += 1) blocks.push(makeBlock(bi, bj, 'mainland'));
+  }
+  for (let bj = DOCKS.minJ; bj < DOCKS.maxJ; bj += 1) blocks.push(makeBlock(DOCKS.minI, bj, 'docks'));
+  return blocks;
+}
+
+function makeBlock(bi, bj, area) {
+  const x0 = bi * BLOCK;
+  const z0 = bj * BLOCK;
+  return {
+    bi,
+    bj,
+    area,
+    cx: x0 + BLOCK / 2,
+    cz: z0 + BLOCK / 2,
+    lot: { minX: x0 + SIDEWALK_OUTER, maxX: x0 + BLOCK - SIDEWALK_OUTER, minZ: z0 + SIDEWALK_OUTER, maxZ: z0 + BLOCK - SIDEWALK_OUTER },
+  };
+}
