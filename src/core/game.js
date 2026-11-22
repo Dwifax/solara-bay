@@ -44,7 +44,7 @@ export function createGame(canvas) {
     missions: MISSIONS.map(m => ({ ...m, completed: false, active: false })),
     time: 0,
     isPaused: false,
-    screenMode: 'game' // game, menu, pause
+    screenMode: 'title' // title, game, menu, pause, gameover
   };
 
   const police = createPoliceSystem(gameState, city, random);
@@ -54,11 +54,30 @@ export function createGame(canvas) {
 
   return {
     update(dt, actions) {
+      if (gameState.screenMode === 'title') {
+        if (actions.forward || actions.fire || actions.jump) {
+          gameState.screenMode = 'game';
+        }
+        return;
+      }
+
       if (actions.menu && !menuToggle) {
         menuToggle = true;
-        gameState.screenMode = gameState.screenMode === 'game' ? 'pause' : 'game';
+        if (gameState.screenMode === 'game') gameState.screenMode = 'pause';
+        else if (gameState.screenMode === 'pause') gameState.screenMode = 'game';
       }
       if (!actions.menu) menuToggle = false;
+
+      if (gameState.screenMode === 'gameover') {
+        if (actions.forward || actions.fire || actions.jump) {
+          gameState.screenMode = 'title';
+          player.x = city.playerStart.x;
+          player.y = city.playerStart.y;
+          player.health = 100;
+          gameState.wanted = 0;
+        }
+        return;
+      }
 
       if (gameState.screenMode !== 'game') return;
 
@@ -100,6 +119,31 @@ export function createGame(canvas) {
     render() {
       const w = renderer.getWidth();
       const h = renderer.getHeight();
+
+      // Title screen
+      if (gameState.screenMode === 'title') {
+        renderer.clear('#000a1a');
+        const ctx = renderer.getContext();
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, h);
+        gradient.addColorStop(0, '#1a3a5a');
+        gradient.addColorStop(1, '#0a1a2a');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
+
+        renderer.drawText('SOLARA BAY', w / 2 - 100, h / 2 - 100, '#ff9900', 48);
+        renderer.drawText('A Crime Story', w / 2 - 60, h / 2 - 40, '#ffff00', 20);
+
+        const time = gameState.time % 2;
+        const opacity = Math.sin(time * Math.PI) * 0.5 + 0.5;
+        ctx.globalAlpha = opacity;
+        renderer.drawText('Press SPACEBAR to start', w / 2 - 110, h / 2 + 60, '#00ff00', 16);
+        ctx.globalAlpha = 1;
+
+        renderer.drawText('WASD: Move | F: Enter Vehicle | Mouse: Look | ESC: Menu', w / 2 - 200, h - 100, '#888888', 12);
+        renderer.drawText('E: Fire | Left Click: Aim | P: Save | L: Load', w / 2 - 150, h - 75, '#888888', 12);
+        return;
+      }
 
       renderer.clear('#1a3a2a');
 
