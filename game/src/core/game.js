@@ -30,6 +30,8 @@ import { createMissionSystem } from '../systems/missionSystem.js';
 import { createEconomy } from '../systems/economy.js';
 import { createActivities } from '../systems/activities.js';
 import { createAudioDirector } from '../audio/audioDirector.js';
+import { createTutorialHints } from '../systems/tutorialHints.js';
+import { createPoliceRadio } from '../systems/policeRadio.js';
 import { createUi } from '../ui/uiRoot.js';
 import { districtAt } from '../data/districts.js';
 
@@ -89,6 +91,8 @@ export function createGame(canvas, uiRoot) {
   game.audioDirector = createAudioDirector(game);
   game.flow = createGameFlow(game);
   game.ui = createUi(game, uiRoot, game.flow);
+  game.hints = createTutorialHints(game);
+  game.policeRadio = createPoliceRadio(game);
   game.economy.addShopMarkers();
   game.activities.addMarkers();
   game.player.selectWeapon('fists');
@@ -112,6 +116,7 @@ export function createGame(canvas, uiRoot) {
       game.missions.update(sdt);
       game.economy.update(sdt);
       game.activities.update(sdt);
+      game.hints.update(sdt);
       game.vehicleEffects.update(sdt);
       if (game.player.vehicle) game.player.position.copy(game.player.vehicle.position);
       events.emit('stepEnd', {});
