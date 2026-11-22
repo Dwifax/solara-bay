@@ -75,6 +75,7 @@ export function createGame(canvas, uiRoot) {
   gfx.scene.add(game.player.group);
   game.cameraCtl = createCameraController(gfx.camera, city.collision);
   game.cameraCtl.state.sensitivity = settings.sensitivity;
+  game.cameraCtl.state.invertY = settings.invertY;
   game.vehicleSystem = createVehicleSystem(game);
   game.pedSystem = createPedestrianSystem(game);
   game.traffic = createTrafficSystem(game);

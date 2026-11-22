@@ -112,9 +112,44 @@ export function buildBuildingMeshes(scene, generated, collision) {
     scene.add(mesh);
   }
 
-  // Painted signs for named places.
+  // Painted signs for named places, glowing neon names on the hotels.
   for (const s of generated.signs) addSign(scene, s);
+  for (const s of generated.neonSigns) addNeonSign(scene, s);
   return meshes;
+}
+
+/** A neon script sign: glowing outlined letters that brighten after sunset. */
+function addNeonSign(scene, s) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 112;
+  const ctx = canvas.getContext('2d');
+  ctx.font = 'italic bold 70px Georgia, "Times New Roman", serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  let size = 70;
+  while (ctx.measureText(s.text).width > 480 && size > 20) {
+    size -= 4;
+    ctx.font = `italic bold ${size}px Georgia, "Times New Roman", serif`;
+  }
+  ctx.shadowColor = s.color;
+  ctx.shadowBlur = 18;
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = s.color;
+  ctx.strokeText(s.text, 256, 58);
+  ctx.shadowBlur = 6;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillText(s.text, 256, 58);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const material = createNightGlowMaterial(0xffffff, { dayLevel: 0.75 });
+  material.map = texture;
+  material.transparent = true;
+  material.depthWrite = false;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(s.w, s.w * (112 / 512)), material);
+  mesh.position.set(s.x, s.y, s.z);
+  mesh.rotation.y = s.rotY;
+  scene.add(mesh);
 }
 
 /** A flat sign board with text, facing rotY (0 = facing +z). */
