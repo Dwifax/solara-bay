@@ -69,10 +69,16 @@ class PursuitDriver {
       desiredSpeed = pv ? Math.max(14, pv.speed + 8 * this.aggression) : Math.min(14, d * 0.6);
     } else {
       this.repath -= dt;
-      if (!this.route || this.repath <= 0) {
-        this.repath = 2.5;
-        const start = nearestNode(game.city.network, v.position.x + Math.sin(v.heading) * 15, v.position.z + Math.cos(v.heading) * 15);
-        const goal = nearestNode(game.city.network, goalX, goalZ);
+      const goal = nearestNode(game.city.network, goalX, goalZ);
+      if (!this.route || (this.repath <= 0 && goal !== this.goalNode)) {
+        this.repath = 3;
+        this.goalNode = goal;
+        // Route from the junction ahead on the street we are on, never one behind us.
+        const road = nearestRoadPoint(game.city.network, v.position.x, v.position.z);
+        const e = road.edge;
+        const f = v.forward();
+        const aheadB = (e.b.x - v.position.x) * f.x + (e.b.z - v.position.z) * f.z;
+        const start = aheadB > 0 ? e.b : e.a;
         this.route = findRoute(game.city.network, start, goal);
         this.routeIndex = 0;
       }
