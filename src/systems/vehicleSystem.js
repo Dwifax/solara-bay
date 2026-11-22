@@ -61,8 +61,8 @@ export function createVehicleSystem(game) {
               b.vz += (impulse / mb) * dz;
               const impact = -rel;
               if (impact > 3) {
-                a.damage(impact * impact * 1.2 * ta, events, a.driver === 'player' ? 'player-crash' : null);
-                b.damage(impact * impact * 1.2 * tb, events, b.driver === 'player' ? 'player-crash' : null);
+                a.damage(impact * impact * 0.7 * ta, events, a.driver === 'player' ? 'player-crash' : null);
+                b.damage(impact * impact * 0.7 * tb, events, b.driver === 'player' ? 'player-crash' : null);
                 events.emit('vehicleCollision', { a, b, impact, x: (pa.x + pb.x) / 2, z: (pa.z + pb.z) / 2 });
               }
             }

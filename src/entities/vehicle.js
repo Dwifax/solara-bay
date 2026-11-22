@@ -138,7 +138,10 @@ export class Vehicle {
     this.steer += (targetSteer - this.steer) * damp(10, dt);
     const wheelbase = spec.length * 0.6;
     let yaw = (vF / wheelbase) * Math.tan(this.steer);
-    if (c.handbrake && Math.abs(vF) > 5) yaw *= 1.45;
+    if (c.handbrake && Math.abs(vF) > 5) yaw *= 1.35;
+    // Tyres can only turn the car as fast as their grip allows at this speed.
+    const maxYaw = ((spec.grip * 2.2) / Math.max(Math.abs(vF), 5)) * (c.handbrake ? 2.2 : 1);
+    yaw = clamp(yaw, -maxYaw, maxYaw);
     this.yawRate += (yaw - this.yawRate) * damp(c.handbrake ? 5 : 12, dt);
     this.heading += this.yawRate * dt;
 
@@ -171,7 +174,7 @@ export class Vehicle {
         // A glancing hit at the front turns the car away from the wall.
         this.yawRate += (k === 0 ? 1 : -1) * (res.nx * fz - res.nz * fx) * impact * 0.05;
         if (impact > 5) {
-          this.damage((impact - 4) * (impact - 4) * 1.6, events, this.driver === 'player' ? 'player-crash' : null);
+          this.damage((impact - 5) * (impact - 5) * 0.75, events, this.driver === 'player' ? 'player-crash' : null);
           events.emit('vehicleImpact', { vehicle: this, impact, x: circle.x, z: circle.z });
         }
       }

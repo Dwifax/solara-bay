@@ -76,6 +76,8 @@ export function createMenus(game, root, handlers) {
     if (top && top.onClose) top.onClose();
     focus = 0;
     render();
+    // Backing out of a menu opened on its own (shop, save point) returns to the game.
+    if (stack.length === 0 && game.state === 'paused') handlers.resume();
   }
 
   function button(parent, label, action, opts = {}) {
