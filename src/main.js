@@ -1,29 +1,51 @@
-// Boot (temporary test harness while systems are built).
+// Solara Bay: boot. Builds the game, starts the loop and shows the title screen, or, with
+// ?shot=<scene> (or #shot=<scene>), stages a deterministic screenshot scene instead.
 import { createGame } from './core/game.js';
-import { startGameLoop } from './core/gameLoop.js';
+import { startGameLoop, STEP } from './core/gameLoop.js';
+import { stageShot } from './shots/screenshotScenes.js';
+import { createRandom } from './core/random.js';
 
 const canvas = document.getElementById('game');
-const game = createGame(canvas);
-window.__game = game;
-game.state = 'playing';
-game.player.giveWeapon('pistol', 60);
-game.player.giveWeapon('smg', 120);
-game.tod.state.hour = 18.6;
-game.vehicleSystem.spawn('vento', -150, 100.5, Math.PI / 2);
-game.cameraCtl.snapBehind(Math.PI);
-let fps = 0;
-startGameLoop(
-  (dt) => {
-    if (game.state === 'playing') game.step(dt);
-  },
-  (dt) => {
-    fps = fps * 0.95 + (1 / Math.max(dt, 0.001)) * 0.05;
-    game.renderFrame(dt);
-  },
-);
-canvas.addEventListener('click', () => game.input.requestLock());
+const uiRoot = document.getElementById('ui');
+const loading = document.getElementById('loading');
+const params = new URLSearchParams(window.location.search);
+const hashParams = new URLSearchParams(window.location.hash.slice(1));
+const shot = params.get('shot') ?? hashParams.get('shot');
+
+// Screenshot scenes use a seeded Math.random so the same frame comes out every time.
+if (shot) Math.random = createRandom(1234).next;
+
+const game = createGame(canvas, uiRoot);
+window.__solara = game;
+
+function hideLoading() {
+  if (loading) loading.remove();
+}
+
+if (shot) {
+  document.body.classList.add('shot-mode');
+  stageShot(shot, game, STEP).then(() => {
+    hideLoading();
+    let painted = 0;
+    function paint() {
+      game.renderFrame(1 / 60);
+      painted += 1;
+      if (painted < 3) requestAnimationFrame(paint);
+      else window.__shotReady = true;
+    }
+    requestAnimationFrame(paint);
+  });
+} else {
+  game.flow.showTitle();
+  canvas.addEventListener('click', () => {
+    if (game.state === 'playing') game.input.requestLock();
+  });
+  startGameLoop(game.step, game.renderFrame);
+  requestAnimationFrame(hideLoading);
+}
+
 window.__debugStats = () => ({
-  fps: Math.round(fps),
+  state: game.state,
   calls: game.gfx.renderer.info.render.calls,
   tris: game.gfx.renderer.info.render.triangles,
   vehicles: game.vehicles.length,
@@ -31,5 +53,7 @@ window.__debugStats = () => ({
   player: game.player.position.toArray().map((v) => Math.round(v * 10) / 10),
   inCar: !!game.player.vehicle,
   wanted: game.wanted.level,
-  hp: game.player.health,
+  hp: Math.round(game.player.health),
+  mission: game.missions.active ? `${game.missions.active.mission.id}#${game.missions.active.stepIndex}` : null,
+  money: game.economy.state.money,
 });

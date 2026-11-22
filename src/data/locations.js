@@ -15,6 +15,6 @@ export const LOCATIONS = {
 
 /** Where purchased cars are delivered and where the player can grab a car near home. */
 export const PARKING_SPOTS = [
-  { x: -130, z: 104, heading: Math.PI / 2 },
+  { x: -175, z: 105.2, heading: Math.PI / 2 },
   { x: 260, z: -104, heading: -Math.PI / 2 },
 ];

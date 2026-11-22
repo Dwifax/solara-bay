@@ -1,3 +1,7 @@
-html, body { margin: 0; height: 100%; overflow: hidden; background: #0d0f1a; font-family: 'Trebuchet MS', 'Segoe UI', Arial, sans-serif; }
+/* Page frame and the loading screen. */
+html, body { margin: 0; height: 100%; overflow: hidden; background: #0d0f1a; font-family: 'Trebuchet MS', 'Segoe UI', Arial, sans-serif; user-select: none; }
 #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 #ui { position: fixed; inset: 0; pointer-events: none; color: #fff; }
+#loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: linear-gradient(180deg, #2a1440, #ff7a5c 160%); z-index: 10; }
+.loading-logo { font-family: 'Impact', 'Arial Black', sans-serif; font-size: 72px; letter-spacing: 8px; background: linear-gradient(180deg, #ffe680, #ff5e7e); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.loading-text { color: #ffe1c2; font-size: 18px; letter-spacing: 2px; }
