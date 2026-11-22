@@ -3,7 +3,7 @@
 // and beach umbrellas, and the fountain in Bayfront Park.
 import * as THREE from 'three';
 import { box, cylinder, mergeGeometries, paint } from '../render/geometryUtils.js';
-import { vertexColorMaterial, createNightGlowMaterial, standardMaterial } from '../render/cityMaterials.js';
+import { vertexColorMaterial, createNightGlowMaterial } from '../render/cityMaterials.js';
 import { BLOCK, BRIDGE_ROWS, CHANNEL, ROAD_HALF, PIER, BEACH } from './cityLayout.js';
 
 /** A thin beam between two points (for cables and trusses). */
@@ -266,4 +266,3 @@ export function buildLandmarks(scene, collision, rng, blocks) {
   };
 }
 
-export { standardMaterial };

@@ -6,6 +6,7 @@ import { createSkyDome } from '../render/skyDome.js';
 import { createTimeOfDay, paletteAt } from '../render/timeOfDay.js';
 import { updateCityMaterials } from '../render/cityMaterials.js';
 import { createEffects } from '../render/particles.js';
+import { createSkidMarks } from '../render/skidMarks.js';
 import { generateCity } from '../world/cityGenerator.js';
 import { createMarkers } from '../world/markers.js';
 import { createInput } from './input.js';
@@ -66,6 +67,7 @@ export function createGame(canvas, uiRoot) {
   };
 
   game.effects = createEffects(gfx.scene);
+  game.skidMarks = createSkidMarks(gfx.scene);
   game.markers = createMarkers(gfx.scene);
   game.player = new Player(-140, 92);
   gfx.scene.add(game.player.group);
@@ -129,6 +131,7 @@ export function createGame(canvas, uiRoot) {
     updateCityMaterials(tod.state.night, palette.horizon, dt);
     city.water.update(dt, tod.state.sunDir, palette.sun, palette.horizon, tod.state.night);
     city.landmarks.update(dt);
+    city.boats.update(dt);
     game.effects.update(playing ? dt * game.timeScale : 0);
     game.markers.update(dt, game.camera);
     sky.follow(gfx.camera);

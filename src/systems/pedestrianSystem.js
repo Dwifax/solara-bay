@@ -197,7 +197,23 @@ export function createPedestrianSystem(game) {
     if (impact > 10) scareAround(x, z, 15, 5);
   });
 
+  /** Civilians in front of a raised gun run for it. */
+  function reactToAim() {
+    const p = game.player;
+    if (!p.aiming || p.vehicle || p.current === 'fists') return;
+    const fx = Math.sin(p.heading);
+    const fz = Math.cos(p.heading);
+    for (const ped of game.peds) {
+      if (ped.role !== 'civilian' || ped.dead || ped.ai.mode === 'flee') continue;
+      const dx = ped.position.x - p.position.x;
+      const dz = ped.position.z - p.position.z;
+      const d = Math.hypot(dx, dz);
+      if (d < 22 && (dx * fx + dz * fz) / (d || 1) > 0.85) makeFlee(ped, p.position.x, p.position.z, 8);
+    }
+  }
+
   function update(dt) {
+    reactToAim();
     const focus = game.player.vehicle ? game.player.vehicle.position : game.player.position;
     for (const ped of game.peds) {
       if (!ped.dead && !ped.inVehicle) {

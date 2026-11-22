@@ -34,6 +34,7 @@ export function createGameFlow(game) {
     player.moveX = 0;
     player.moveZ = 0;
     game.controller.cancelEntering();
+    game.skidMarks.clear();
     document.body.classList.remove('dead-fx');
   }
 
