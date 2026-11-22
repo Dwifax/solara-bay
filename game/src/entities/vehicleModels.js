@@ -1,123 +1,199 @@
-// Car models built from boxes: each body style returns painted body parts, glass, head and tail
-// lamps and wheel positions. createVehicleModel assembles them into a Group with spinning,
-// steering wheels, brake lights, police light bars and night headlight beams.
+// Car models: each body style is a side profile (with wheel arches) extruded to the car's width,
+// a raked glass cabin with roof and pillars, lamps, trim and wheels. createVehicleModel assembles
+// them into a Group with spinning, steering wheels, brake lights, police light bars (with glow)
+// and night headlight beams.
 import * as THREE from 'three';
-import { box, cylinder, mergeGeometries } from '../render/geometryUtils.js';
+import { box, cylinder, mergeGeometries, paint } from '../render/geometryUtils.js';
 import { createNightGlowMaterial } from '../render/cityMaterials.js';
 
 const TRIM = 0x1d1f22;
-const CHROME = 0xb8bec4;
-const GLASS = 0x22303c;
+const CHROME = 0xc9ced4;
+const GLASS = 0x1f2b36;
 
-function sedanLike(L, W, color, opts = {}) {
-  const lowH = opts.lowH ?? 0.58;
-  const base = opts.base ?? 0.32;
-  const cabinLen = opts.cabinLen ?? L * 0.46;
-  const cabinZ = opts.cabinZ ?? -0.15;
-  const cabinH = opts.cabinH ?? 0.52;
-  const top = base + lowH;
-  const body = [
-    box(W, lowH, L, color, 0, base + lowH / 2, 0),
-    box(W - 0.1, 0.08, L * 0.3, color, 0, top + 0.02, L * 0.33),
-    box(W + 0.04, 0.2, 0.25, TRIM, 0, base + 0.12, L / 2 - 0.05),
-    box(W + 0.04, 0.2, 0.25, TRIM, 0, base + 0.12, -L / 2 + 0.05),
-    box(W * 0.5, 0.16, 0.05, 0x101010, 0, base + lowH * 0.55, L / 2 + 0.01),
-    box(0.08, 0.06, 0.18, TRIM, W / 2 + 0.06, top + 0.25, cabinZ + cabinLen / 2 - 0.1),
-    box(0.08, 0.06, 0.18, TRIM, -W / 2 - 0.06, top + 0.25, cabinZ + cabinLen / 2 - 0.1),
-  ];
-  const roofW = W - 0.22;
-  body.push(box(roofW, 0.08, cabinLen * 0.82, color, 0, top + cabinH, cabinZ - cabinLen * 0.04));
-  for (const sx of [-1, 1]) {
-    body.push(box(0.08, cabinH, 0.1, color, sx * (roofW / 2 - 0.02), top + cabinH / 2, cabinZ + cabinLen / 2 - 0.08));
-    body.push(box(0.08, cabinH, 0.14, color, sx * (roofW / 2 - 0.02), top + cabinH / 2, cabinZ - cabinLen / 2 + 0.1));
-    body.push(box(0.08, cabinH, 0.08, color, sx * (roofW / 2 - 0.02), top + cabinH / 2, cabinZ));
+/** Extrude a side profile [[forward, up], ...] across the car (width w, centred). */
+function extrudeProfile(points, w, color, bevel = 0.05) {
+  const shape = new THREE.Shape();
+  shape.moveTo(points[0][0], points[0][1]);
+  for (let i = 1; i < points.length; i += 1) shape.lineTo(points[i][0], points[i][1]);
+  shape.closePath();
+  const g = new THREE.ExtrudeGeometry(shape, { depth: Math.max(0.01, w - bevel * 2), bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: 2, curveSegments: 4 });
+  g.rotateY(-Math.PI / 2);
+  g.translate(w / 2 - bevel, 0, 0);
+  return paint(g, color);
+}
+
+/** Points of a wheel arch over an axle at `ax` (front to rear along the bottom edge). */
+function arch(ax, bottom, r) {
+  const pts = [[ax + r, bottom]];
+  for (let k = 1; k < 9; k += 1) {
+    const a = (k / 9) * Math.PI;
+    pts.push([ax + Math.cos(a) * r, bottom + Math.sin(a) * r * 0.92]);
   }
-  const glass = [box(roofW - 0.04, cabinH - 0.04, cabinLen - 0.06, GLASS, 0, top + cabinH / 2, cabinZ)];
-  const head = [box(0.42, 0.14, 0.06, 0xfff4d6, -W / 2 + 0.32, base + lowH * 0.7, L / 2 + 0.01), box(0.42, 0.14, 0.06, 0xfff4d6, W / 2 - 0.32, base + lowH * 0.7, L / 2 + 0.01)];
-  const tail = [box(0.4, 0.13, 0.06, 0xff2a2a, -W / 2 + 0.3, base + lowH * 0.75, -L / 2 - 0.01), box(0.4, 0.13, 0.06, 0xff2a2a, W / 2 - 0.3, base + lowH * 0.75, -L / 2 - 0.01)];
-  const wx = W / 2 - 0.12;
-  const wz = L / 2 - (opts.wheelInset ?? 0.85);
-  return { body, glass, head, tail, wheels: [[-wx, wz], [wx, wz], [-wx, -wz], [wx, -wz]], wheelR: opts.wheelR ?? 0.36, roofY: top + cabinH };
+  pts.push([ax - r, bottom]);
+  return pts;
+}
+
+/** The lower body outline from rear to front with arches cut over each axle. */
+function bodyOutline({ L, bottom, rearH, deckH, beltRear, beltFront, noseH, axles, archR }) {
+  const rear = -L / 2;
+  const front = L / 2;
+  const pts = [
+    [rear + 0.08, bottom],
+    [rear, bottom + 0.12],
+    [rear, rearH],
+    [rear + 0.12, deckH],
+    [rear + 0.5, beltRear],
+    [front - 0.55, beltFront],
+    [front - 0.08, noseH],
+    [front, noseH - 0.12],
+    [front, bottom + 0.12],
+    [front - 0.1, bottom],
+  ];
+  for (const ax of axles.slice().sort((a, b) => b - a)) pts.push(...arch(ax, bottom, archR));
+  return pts;
+}
+
+/** A thin bar from (z1, y1) to (z2, y2) at side x. */
+function slanted(x, z1, y1, z2, y2, color) {
+  const len = Math.hypot(z2 - z1, y2 - y1);
+  const g = paint(new THREE.BoxGeometry(0.075, len, 0.1), color);
+  g.rotateX(Math.atan2(z2 - z1, y2 - y1));
+  g.translate(x, (y1 + y2) / 2, (z1 + z2) / 2);
+  return g;
+}
+
+/** A glass cabin with a raked windscreen, a roof cap and pillars in body colour. */
+function cabin(parts, glass, { belt, top, rear, front, rakeRear, rakeFront, w, color }) {
+  glass.push(extrudeProfile([[rear, belt], [front, belt], [front - rakeFront, top], [rear + rakeRear, top]], w, GLASS, 0.02));
+  parts.push(extrudeProfile([[rear + rakeRear - 0.04, top - 0.02], [front - rakeFront + 0.04, top - 0.02], [front - rakeFront + 0.02, top + 0.07], [rear + rakeRear, top + 0.07]], w + 0.02, color, 0.02));
+  for (const sx of [-1, 1]) {
+    const x = sx * (w / 2 - 0.02);
+    parts.push(slanted(x, front, belt, front - rakeFront, top, color));
+    parts.push(slanted(x, rear, belt, rear + rakeRear, top, color));
+    const mid = (front - rakeFront + rear + rakeRear) / 2;
+    parts.push(box(0.07, top - belt, 0.09, color, x, (top + belt) / 2, mid));
+  }
+}
+
+function lamps(L, W, y, frontInset = 0.32, h = 0.13) {
+  return {
+    head: [box(0.4, h, 0.06, 0xfff4d6, -W / 2 + frontInset, y, L / 2 + 0.005), box(0.4, h, 0.06, 0xfff4d6, W / 2 - frontInset, y, L / 2 + 0.005)],
+    tail: [box(0.42, h, 0.06, 0xff2a2a, -W / 2 + 0.3, y + 0.04, -L / 2 - 0.005), box(0.42, h, 0.06, 0xff2a2a, W / 2 - 0.3, y + 0.04, -L / 2 - 0.005)],
+  };
+}
+
+function bumpers(parts, L, W, y) {
+  parts.push(box(W + 0.03, 0.16, 0.2, TRIM, 0, y, L / 2 - 0.06));
+  parts.push(box(W + 0.03, 0.16, 0.2, TRIM, 0, y, -L / 2 + 0.06));
+  parts.push(box(W * 0.46, 0.12, 0.04, 0x0d0d0d, 0, y + 0.22, L / 2 + 0.01));
+}
+
+/** A conventional car from a handful of proportions. */
+function threeBox(s, color, o) {
+  const L = s.length;
+  const W = s.width;
+  const axleF = L / 2 - o.wheelInset;
+  const axleR = -L / 2 + o.wheelInset;
+  const parts = [extrudeProfile(bodyOutline({ L, bottom: o.bottom, rearH: o.rearH, deckH: o.deckH, beltRear: o.belt, beltFront: o.beltFront ?? o.belt - 0.04, noseH: o.noseH, axles: [axleF, axleR], archR: o.wheelR + 0.07 }), W, color, 0.06)];
+  const glass = [];
+  cabin(parts, glass, { belt: o.belt - 0.02, top: o.top, rear: o.cabinRear, front: o.cabinFront, rakeRear: o.rakeRear, rakeFront: o.rakeFront, w: W - 0.14, color });
+  bumpers(parts, L, W, o.bottom + 0.1);
+  for (const sx of [-1, 1]) parts.push(box(0.05, 0.08, 0.2, TRIM, sx * (W / 2 + 0.03), o.belt + 0.05, o.cabinFront - 0.05));
+  const l = lamps(L, W, (o.noseH + o.bottom) / 2 + 0.08);
+  const wx = W / 2 - 0.13;
+  return { body: parts, glass, head: l.head, tail: l.tail, wheels: [[-wx, axleF], [wx, axleF], [-wx, axleR], [wx, axleR]], wheelR: o.wheelR, roofY: o.top + 0.07 };
+}
+
+const SEDAN = { bottom: 0.3, rearH: 0.86, deckH: 0.98, belt: 1.0, noseH: 0.86, top: 1.5, cabinRear: -1.45, cabinFront: 0.75, rakeRear: 0.5, rakeFront: 0.62, wheelInset: 0.85, wheelR: 0.36 };
+
+function archedOutline(outline, axles, bottom, r) {
+  const pts = outline.slice();
+  for (const ax of axles.slice().sort((a, b) => b - a)) pts.push(...arch(ax, bottom, r));
+  return pts;
 }
 
 const STYLES = {
-  sedan: (s, c) => sedanLike(s.length, s.width, c),
+  sedan: (s, c) => threeBox(s, c, SEDAN),
   taxi: (s, c) => {
-    const m = sedanLike(s.length, s.width, c);
-    m.body.push(box(0.7, 0.22, 0.32, 0xffffff, 0, m.roofY + 0.15, -0.2));
-    m.body.push(box(s.width + 0.02, 0.1, s.length * 0.5, 0x111111, 0, 0.62, 0));
+    const m = threeBox(s, c, SEDAN);
+    m.body.push(box(0.75, 0.22, 0.34, 0xffffff, 0, m.roofY + 0.12, -0.35));
+    m.body.push(box(0.78, 0.04, 0.36, 0x111111, 0, m.roofY + 0.24, -0.35));
+    for (const sx of [-1, 1]) m.body.push(box(0.02, 0.12, s.length * 0.55, 0x111111, sx * (s.width / 2 + 0.005), 0.72, 0));
     return m;
   },
   police: (s, c) => {
-    const m = sedanLike(s.length, s.width, c);
-    m.body.push(box(s.width + 0.03, 0.16, s.length * 0.98, 0x1d4ed8, 0, 0.72, 0));
-    m.body.push(box(s.width - 0.06, 0.06, s.length * 0.28, 0x111827, 0, 0.93, s.length * 0.33));
-    m.body.push(box(s.width + 0.02, 0.3, 0.55, 0x111827, 0, 0.5, s.length / 2 - 0.3));
-    m.body.push(box(s.width + 0.02, 0.3, 0.55, 0x111827, 0, 0.5, -s.length / 2 + 0.3));
-    m.body.push(box(s.width * 0.8, 0.35, 0.12, 0x222222, 0, 0.5, s.length / 2 + 0.12));
-    m.body.push(box(1.1, 0.08, 0.3, 0x222222, 0, m.roofY + 0.06, -0.2));
+    const m = threeBox(s, c, SEDAN);
+    for (const sx of [-1, 1]) {
+      m.body.push(box(0.02, 0.16, s.length * 0.62, 0x1d4ed8, sx * (s.width / 2 + 0.005), 0.74, -0.1));
+      m.body.push(box(0.02, 0.36, 0.9, 0x111827, sx * (s.width / 2 + 0.005), 0.62, s.length / 2 - 0.55));
+      m.body.push(box(0.02, 0.36, 0.8, 0x111827, sx * (s.width / 2 + 0.005), 0.62, -s.length / 2 + 0.5));
+    }
+    m.body.push(box(s.width - 0.2, 0.03, s.length * 0.26, 0x111827, 0, 0.995, s.length * 0.32));
+    m.body.push(box(s.width * 0.8, 0.38, 0.12, 0x1a1a1a, 0, 0.55, s.length / 2 + 0.14));
+    m.body.push(box(1.15, 0.08, 0.32, 0x222222, 0, m.roofY + 0.04, -0.35));
     m.siren = true;
+    m.sirenZ = -0.35;
     return m;
   },
   sports: (s, c) => {
-    const m = sedanLike(s.length, s.width, c, { lowH: 0.42, base: 0.26, cabinLen: s.length * 0.38, cabinZ: -0.35, cabinH: 0.42, wheelR: 0.34, wheelInset: 0.8 });
-    m.body.push(box(s.width - 0.1, 0.05, 0.35, TRIM, 0, 1.08, -s.length / 2 + 0.2));
-    for (const sx of [-1, 1]) m.body.push(box(0.06, 0.26, 0.08, TRIM, sx * 0.6, 0.92, -s.length / 2 + 0.22));
-    m.body.push(box(s.width * 0.7, 0.04, 1.0, 0x111111, 0, 0.7, s.length / 2 - 0.8));
+    const m = threeBox(s, c, { bottom: 0.24, rearH: 0.78, deckH: 0.86, belt: 0.86, beltFront: 0.74, noseH: 0.6, top: 1.2, cabinRear: -1.35, cabinFront: 0.45, rakeRear: 0.75, rakeFront: 0.72, wheelInset: 0.8, wheelR: 0.35 });
+    m.body.push(box(s.width - 0.1, 0.05, 0.38, TRIM, 0, 1.08, -s.length / 2 + 0.22));
+    for (const sx of [-1, 1]) m.body.push(box(0.06, 0.24, 0.08, TRIM, sx * 0.6, 0.95, -s.length / 2 + 0.24));
+    m.body.push(box(s.width * 0.5, 0.03, 0.9, 0x111111, 0, 0.75, s.length / 2 - 0.85));
+    for (const sx of [-1, 1]) m.body.push(box(0.04, 0.12, 0.6, 0x111111, sx * (s.width / 2 + 0.01), 0.6, -0.25));
     return m;
   },
   muscle: (s, c) => {
-    const m = sedanLike(s.length, s.width, c, { lowH: 0.56, cabinLen: s.length * 0.36, cabinZ: -0.55, cabinH: 0.46 });
-    m.body.push(box(0.7, 0.14, 0.9, TRIM, 0, 0.95, 0.9));
-    m.body.push(box(0.22, 0.02, s.length + 0.01, 0xffffff, -0.25, 0.91, 0));
-    m.body.push(box(0.22, 0.02, s.length + 0.01, 0xffffff, 0.25, 0.91, 0));
+    const m = threeBox(s, c, { bottom: 0.3, rearH: 0.88, deckH: 0.96, belt: 0.98, beltFront: 0.96, noseH: 0.9, top: 1.42, cabinRear: -1.65, cabinFront: 0.25, rakeRear: 0.55, rakeFront: 0.55, wheelInset: 0.88, wheelR: 0.38 });
+    m.body.push(box(0.7, 0.13, 0.95, TRIM, 0, 1.02, 1.05));
+    m.body.push(box(0.22, 0.015, s.length - 0.2, 0xffffff, -0.25, 1.005, 0.3));
+    m.body.push(box(0.22, 0.015, s.length - 0.2, 0xffffff, 0.25, 1.005, 0.3));
     return m;
   },
-  compact: (s, c) => {
-    const m = sedanLike(s.length, s.width, c, { lowH: 0.56, cabinLen: s.length * 0.62, cabinZ: -0.25, cabinH: 0.62, wheelInset: 0.62, wheelR: 0.32 });
-    return m;
-  },
+  compact: (s, c) => threeBox(s, c, { bottom: 0.28, rearH: 1.0, deckH: 1.02, belt: 1.02, beltFront: 0.96, noseH: 0.82, top: 1.62, cabinRear: -1.82, cabinFront: 0.55, rakeRear: 0.12, rakeFront: 0.62, wheelInset: 0.62, wheelR: 0.32 }),
   pickup: (s, c) => {
     const L = s.length;
     const W = s.width;
-    const m = sedanLike(L, W, c, { lowH: 0.62, base: 0.45, cabinLen: L * 0.3, cabinZ: L * 0.08, cabinH: 0.62, wheelR: 0.44, wheelInset: 0.95 });
-    for (const sx of [-1, 1]) m.body.push(box(0.1, 0.42, L * 0.42, c, sx * (W / 2 - 0.05), 1.28, -L * 0.27));
-    m.body.push(box(W, 0.42, 0.1, c, 0, 1.28, -L / 2 + 0.05));
-    m.body.push(box(W - 0.2, 0.04, L * 0.42, 0x2b2b2b, 0, 1.08, -L * 0.27));
-    m.body.push(box(W + 0.1, 0.12, 0.2, CHROME, 0, 0.62, L / 2 + 0.02));
+    const m = threeBox(s, c, { bottom: 0.42, rearH: 1.12, deckH: 1.14, belt: 1.16, beltFront: 1.12, noseH: 1.1, top: 1.95, cabinRear: -0.55, cabinFront: 0.95, rakeRear: 0.05, rakeFront: 0.45, wheelInset: 0.95, wheelR: 0.44 });
+    for (const sx of [-1, 1]) m.body.push(box(0.1, 0.38, L * 0.4, c, sx * (W / 2 - 0.05), 1.33, -L * 0.29));
+    m.body.push(box(W, 0.38, 0.1, c, 0, 1.33, -L / 2 + 0.06));
+    m.body.push(box(W - 0.2, 0.04, L * 0.4, 0x2b2b2b, 0, 1.16, -L * 0.29));
+    m.body.push(box(W + 0.1, 0.14, 0.2, CHROME, 0, 0.6, L / 2 + 0.02));
+    m.body.push(box(W * 0.6, 0.26, 0.05, CHROME, 0, 0.92, L / 2 + 0.01));
     return m;
   },
   van: (s, c) => {
     const L = s.length;
     const W = s.width;
-    const body = [
-      box(W, 1.9, L * 0.78, c, 0, 1.33, -L * 0.11),
-      box(W, 1.05, L * 0.22, c, 0, 0.9, L * 0.39),
-      box(W + 0.04, 0.2, 0.25, TRIM, 0, 0.42, L / 2 - 0.05),
-      box(W + 0.04, 0.2, 0.25, TRIM, 0, 0.42, -L / 2 + 0.05),
-      box(W + 0.02, 0.2, L * 0.6, 0x4a90c2, 0, 1.4, -L * 0.15),
-    ];
-    const glass = [box(W - 0.1, 0.7, 0.08, GLASS, 0, 1.75, L * 0.28 + 0.01), box(W + 0.02, 0.6, 0.9, GLASS, 0, 1.75, L * 0.18)];
-    const head = [box(0.4, 0.16, 0.06, 0xfff4d6, -W / 2 + 0.3, 0.95, L / 2 + 0.01), box(0.4, 0.16, 0.06, 0xfff4d6, W / 2 - 0.3, 0.95, L / 2 + 0.01)];
-    const tail = [box(0.2, 0.4, 0.06, 0xff2a2a, -W / 2 + 0.15, 1.0, -L / 2 - 0.01), box(0.2, 0.4, 0.06, 0xff2a2a, W / 2 - 0.15, 1.0, -L / 2 - 0.01)];
+    const axleF = L / 2 - 0.9;
+    const axleR = -L / 2 + 1.0;
+    const outline = archedOutline([[-L / 2, 0.36], [-L / 2, 2.25], [L / 2 - 1.25, 2.28], [L / 2 - 0.3, 1.25], [L / 2, 1.05], [L / 2, 0.4]], [axleF, axleR], 0.36, 0.46);
+    const body = [extrudeProfile(outline, W, c, 0.06)];
+    body.push(box(W + 0.02, 0.18, L * 0.62, 0x4a90c2, 0, 1.25, -L * 0.15));
+    bumpers(body, L, W, 0.45);
+    const glass = [extrudeProfile([[L / 2 - 0.42, 1.3], [L / 2 - 0.26, 1.27], [L / 2 - 1.2, 2.2], [L / 2 - 1.3, 2.22]], W - 0.06, GLASS, 0.01)];
+    glass.push(box(W + 0.02, 0.5, L * 0.35, GLASS, 0, 1.78, -0.2));
+    const l = lamps(L, W, 0.85, 0.3, 0.16);
     const wx = W / 2 - 0.12;
-    return { body, glass, head, tail, wheels: [[-wx, L / 2 - 0.9], [wx, L / 2 - 0.9], [-wx, -L / 2 + 1.0], [wx, -L / 2 + 1.0]], wheelR: 0.38, roofY: 2.3 };
+    return { body, glass, head: l.head, tail: l.tail, wheels: [[-wx, axleF], [wx, axleF], [-wx, axleR], [wx, axleR]], wheelR: 0.38, roofY: 2.3 };
   },
   truck: (s, c) => {
     const L = s.length;
     const W = s.width;
+    const axleF = L / 2 - 1.0;
+    const axleR = -L / 2 + 1.2;
+    const cab = archedOutline([[L / 2 - 1.95, 0.45], [L / 2 - 1.95, 2.25], [L / 2 - 0.55, 2.25], [L / 2, 1.5], [L / 2, 0.45]], [axleF], 0.45, 0.55);
     const body = [
-      box(W, 1.6, 1.9, 0x2a6f97, 0, 1.4, L / 2 - 0.95),
+      extrudeProfile(cab, W, 0x2a6f97, 0.06),
       box(W - 0.1, 2.6, L - 2.2, c, 0, 1.95, -1.05),
       box(W + 0.02, 0.5, L - 2.2, 0x1e88e5, 0, 2.6, -1.05),
-      box(1.0, 0.7, 0.8, 0x9aa0a6, 0, 3.6, 0.3),
-      box(W + 0.04, 0.25, 0.3, TRIM, 0, 0.5, L / 2),
+      box(1.0, 0.7, 0.8, 0x9aa0a6, 0, 3.6, -0.6),
+      box(W + 0.04, 0.25, 0.3, TRIM, 0, 0.55, L / 2),
     ];
-    const glass = [box(W - 0.1, 0.65, 0.06, GLASS, 0, 1.85, L / 2 + 0.01)];
-    const head = [box(0.36, 0.18, 0.06, 0xfff4d6, -W / 2 + 0.3, 0.95, L / 2 + 0.03), box(0.36, 0.18, 0.06, 0xfff4d6, W / 2 - 0.3, 0.95, L / 2 + 0.03)];
-    const tail = [box(0.25, 0.3, 0.06, 0xff2a2a, -W / 2 + 0.2, 0.9, -L / 2 + 0.04), box(0.25, 0.3, 0.06, 0xff2a2a, W / 2 - 0.2, 0.9, -L / 2 + 0.04)];
+    const glass = [extrudeProfile([[L / 2 - 0.5, 1.55], [L / 2 - 0.06, 1.55], [L / 2 - 0.52, 2.18], [L / 2 - 0.7, 2.18]], W - 0.08, GLASS, 0.01)];
+    const l = lamps(L, W, 0.95, 0.3, 0.18);
     const wx = W / 2 - 0.15;
-    return { body, glass, head, tail, wheels: [[-wx, L / 2 - 1.0], [wx, L / 2 - 1.0], [-wx, -L / 2 + 1.2], [wx, -L / 2 + 1.2]], wheelR: 0.46, roofY: 3.3 };
+    return { body, glass, head: l.head, tail: l.tail, wheels: [[-wx, axleF], [wx, axleF], [-wx, axleR], [wx, axleR]], wheelR: 0.46, roofY: 3.3 };
   },
 };
 
@@ -145,6 +221,25 @@ function wheelGeometry(r) {
   return geoCache.get(key);
 }
 
+/** A soft round glow for siren flashes. */
+const glowTexture = (() => {
+  const c = document.createElement('canvas');
+  c.width = 64;
+  c.height = 64;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.25, 'rgba(255,255,255,0.6)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+})();
+const redGlow = new THREE.SpriteMaterial({ map: glowTexture, color: 0xff2a3a, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
+const blueGlow = new THREE.SpriteMaterial({ map: glowTexture, color: 0x2a6aff, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
+
 const beamGeometry = (() => {
   const g = new THREE.ConeGeometry(2.4, 16, 12, 1, true);
   g.translate(0, -8, 0);
@@ -166,6 +261,7 @@ export function createVehicleModel(spec, color) {
       wheelR: parts.wheelR,
       roofY: parts.roofY,
       siren: !!parts.siren,
+      sirenZ: parts.sirenZ ?? -0.2,
     });
   }
   const g = geoCache.get(key);
@@ -193,10 +289,16 @@ export function createVehicleModel(spec, color) {
   if (g.siren) {
     const red = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.14, 0.26), sirenDim);
     const blue = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.14, 0.26), sirenDim);
-    red.position.set(-0.3, g.roofY + 0.16, -0.2);
-    blue.position.set(0.3, g.roofY + 0.16, -0.2);
-    chassis.add(red, blue);
-    sirens = { red, blue };
+    red.position.set(-0.3, g.roofY + 0.14, g.sirenZ);
+    blue.position.set(0.3, g.roofY + 0.14, g.sirenZ);
+    const redHalo = new THREE.Sprite(redGlow);
+    const blueHalo = new THREE.Sprite(blueGlow);
+    redHalo.scale.setScalar(2.6);
+    blueHalo.scale.setScalar(2.6);
+    redHalo.position.copy(red.position);
+    blueHalo.position.copy(blue.position);
+    chassis.add(red, blue, redHalo, blueHalo);
+    sirens = { red, blue, redHalo, blueHalo };
   }
   const beams = new THREE.Group();
   for (const sx of [-1, 1]) {
@@ -221,9 +323,13 @@ export function animateVehicleModel(model, dt, { speed, steer, braking, sirenOn,
       const phase = Math.floor(time * 6) % 2 === 0;
       model.sirens.red.material = phase ? sirenRed : sirenDim;
       model.sirens.blue.material = phase ? sirenDim : sirenBlue;
+      model.sirens.redHalo.visible = phase;
+      model.sirens.blueHalo.visible = !phase;
     } else {
       model.sirens.red.material = sirenDim;
       model.sirens.blue.material = sirenDim;
+      model.sirens.redHalo.visible = false;
+      model.sirens.blueHalo.visible = false;
     }
   }
   model.chassis.rotation.z = roll;

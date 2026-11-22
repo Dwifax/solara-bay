@@ -4,17 +4,17 @@ import * as THREE from 'three';
 import { clamp, mixColor, lerp } from '../core/mathUtils.js';
 
 const KEYS = [
-  { h: 0, top: 0x050918, horizon: 0x1a1f3e, sun: 0x8090c0, sunI: 0.35, hemiSky: 0x2a3a66, hemiGround: 0x14121c, hemiI: 0.77, fog: 0x161b33, night: 1 },
-  { h: 5.2, top: 0x0b1230, horizon: 0x2d2c55, sun: 0x8090c0, sunI: 0.3, hemiSky: 0x2a3a66, hemiGround: 0x14121c, hemiI: 0.77, fog: 0x1d2140, night: 1 },
+  { h: 0, top: 0x050918, horizon: 0x1a1f3e, sun: 0x9fb2e8, sunI: 0.85, hemiSky: 0x5068a8, hemiGround: 0x2c2833, hemiI: 1.35, fog: 0x161b33, night: 1 },
+  { h: 5.2, top: 0x0b1230, horizon: 0x2d2c55, sun: 0x9fb2e8, sunI: 0.85, hemiSky: 0x5068a8, hemiGround: 0x2c2833, hemiI: 1.35, fog: 0x1d2140, night: 1 },
   { h: 6.3, top: 0x35477e, horizon: 0xf5a77a, sun: 0xffb27a, sunI: 1.2, hemiSky: 0x8fa6d0, hemiGround: 0x6a4a3a, hemiI: 1.12, fog: 0xe5ad8c, night: 0.3 },
   { h: 8, top: 0x4a90e0, horizon: 0xf3dcbc, sun: 0xffe2b8, sunI: 2.4, hemiSky: 0xb5d4f5, hemiGround: 0x9a8064, hemiI: 1.40, fog: 0xe6dccb, night: 0 },
   { h: 12.5, top: 0x3a82d6, horizon: 0xcde5f4, sun: 0xfff4e2, sunI: 3.0, hemiSky: 0xbfdcf8, hemiGround: 0xa0896a, hemiI: 1.47, fog: 0xd3e2ec, night: 0 },
   { h: 16.5, top: 0x4d8bd4, horizon: 0xf7d7a6, sun: 0xffd496, sunI: 2.7, hemiSky: 0xbcd4ee, hemiGround: 0xa38160, hemiI: 1.40, fog: 0xf0d6ad, night: 0 },
   { h: 18.2, top: 0x5677bd, horizon: 0xffb066, sun: 0xffa24e, sunI: 2.4, hemiSky: 0xa9b8e0, hemiGround: 0x9a6a48, hemiI: 1.33, fog: 0xf2b07a, night: 0.05 },
   { h: 19.2, top: 0x3a3e86, horizon: 0xff7e48, sun: 0xff6a34, sunI: 1.5, hemiSky: 0x8a86c8, hemiGround: 0x7a4a40, hemiI: 1.19, fog: 0xdc8064, night: 0.45 },
-  { h: 20.1, top: 0x1b2158, horizon: 0xc0566e, sun: 0xff5a48, sunI: 0.6, hemiSky: 0x5a5c9e, hemiGround: 0x3a2a36, hemiI: 0.98, fog: 0x6a3e5a, night: 0.85 },
-  { h: 21.3, top: 0x070c26, horizon: 0x262650, sun: 0x8090c0, sunI: 0.35, hemiSky: 0x2a3a66, hemiGround: 0x14121c, hemiI: 0.77, fog: 0x1a1d3a, night: 1 },
-  { h: 24, top: 0x050918, horizon: 0x1a1f3e, sun: 0x8090c0, sunI: 0.35, hemiSky: 0x2a3a66, hemiGround: 0x14121c, hemiI: 0.77, fog: 0x161b33, night: 1 },
+  { h: 20.1, top: 0x1b2158, horizon: 0xc0566e, sun: 0xff5a48, sunI: 0.6, hemiSky: 0x6a6cb0, hemiGround: 0x3a2a36, hemiI: 1.2, fog: 0x6a3e5a, night: 0.85 },
+  { h: 21.3, top: 0x070c26, horizon: 0x262650, sun: 0x9fb2e8, sunI: 0.85, hemiSky: 0x5068a8, hemiGround: 0x2c2833, hemiI: 1.35, fog: 0x1a1d3a, night: 1 },
+  { h: 24, top: 0x050918, horizon: 0x1a1f3e, sun: 0x9fb2e8, sunI: 0.85, hemiSky: 0x5068a8, hemiGround: 0x2c2833, hemiI: 1.35, fog: 0x161b33, night: 1 },
 ];
 
 /** Interpolated palette for an hour in [0, 24). */

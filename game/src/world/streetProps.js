@@ -2,7 +2,7 @@
 // after sunset) and traffic signals at every junction, whose lamps follow the signal phase.
 import * as THREE from 'three';
 import { box, cylinder, mergeGeometries } from '../render/geometryUtils.js';
-import { vertexColorMaterial, createNightGlowMaterial } from '../render/cityMaterials.js';
+import { vertexColorMaterial, createNightGlowMaterial, registerNightMaterial } from '../render/cityMaterials.js';
 import { ROAD_HALF } from './cityLayout.js';
 
 function lampPostGeometry() {
@@ -36,18 +36,16 @@ export function buildStreetLights(scene, network) {
   for (const edge of network.edges) {
     const nx = -edge.dirZ;
     const nz = edge.dirX;
-    let side = 1;
-    for (let t = 16; t < edge.length - 10; t += 32) {
-      if (edge.bridge && t > 30 && t < edge.length - 30) {
-        // Bridges get lamps on both rails.
+    // Pairs of lamps facing each other across the street every 30 m.
+    for (let t = 18; t < edge.length - 12; t += 30) {
+      for (const side of [-1, 1]) {
+        const off = ROAD_HALF + (edge.bridge ? 1.6 : 1.2);
+        const x = edge.a.x + edge.dirX * t + nx * off * side;
+        const z = edge.a.z + edge.dirZ * t + nz * off * side;
+        // The arm points back across the road.
+        const rot = Math.atan2(-nx * side, -nz * side);
+        posts.push({ x, z, rot, y: edge.bridge ? 0 : 0.18 });
       }
-      const off = ROAD_HALF + 1.2;
-      const x = edge.a.x + edge.dirX * t + nx * off * side;
-      const z = edge.a.z + edge.dirZ * t + nz * off * side;
-      // The arm points back across the road.
-      const rot = Math.atan2(-nx * side, -nz * side);
-      posts.push({ x, z, rot, y: 0.18 });
-      side = -side;
     }
   }
   const postMesh = new THREE.InstancedMesh(lampPostGeometry(), vertexColorMaterial, posts.length);
@@ -63,16 +61,31 @@ export function buildStreetLights(scene, network) {
   );
   scene.add(bulbMesh);
 
+  // Halos around the bulbs: one point sprite each, faded in at night.
+  const haloGeo = new THREE.BufferGeometry();
+  const haloPos = new Float32Array(posts.length * 3);
+  posts.forEach((p, i) => {
+    haloPos[i * 3] = p.x + Math.sin(p.rot) * 2.2;
+    haloPos[i * 3 + 1] = 7.05;
+    haloPos[i * 3 + 2] = p.z + Math.cos(p.rot) * 2.2;
+  });
+  haloGeo.setAttribute('position', new THREE.BufferAttribute(haloPos, 3));
+  const haloMat = new THREE.PointsMaterial({ color: 0xffd9a0, size: 5.5, map: makeRadialTexture(), transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  registerNightMaterial(haloMat, 0.9);
+  const halos = new THREE.Points(haloGeo, haloMat);
+  halos.renderOrder = 3;
+  scene.add(halos);
+
   // Soft pools of light on the road, additive, night only.
   const poolTex = makeRadialTexture();
-  const poolMat = createNightGlowMaterial(0xffc98a, { additive: true, opacity: 0.55 });
+  const poolMat = createNightGlowMaterial(0xffb870, { additive: true, opacity: 0.85 });
   poolMat.map = poolTex;
   const poolGeo = new THREE.PlaneGeometry(1, 1);
   poolGeo.rotateX(-Math.PI / 2);
   const poolMesh = new THREE.InstancedMesh(poolGeo, poolMat, posts.length);
   placeInstances(
     poolMesh,
-    posts.map((p) => ({ x: p.x + Math.sin(p.rot) * 3.2, y: 0.08, z: p.z + Math.cos(p.rot) * 3.2, rot: 0, sx: 15, sz: 15 })),
+    posts.map((p) => ({ x: p.x + Math.sin(p.rot) * 3.2, y: 0.21, z: p.z + Math.cos(p.rot) * 3.2, rot: 0, sx: 20, sz: 20 })),
   );
   poolMesh.renderOrder = 2;
   scene.add(poolMesh);
