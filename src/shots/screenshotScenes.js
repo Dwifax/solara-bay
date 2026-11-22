@@ -50,9 +50,9 @@ function chase(game, stepDt) {
   game.ui.hud.clearMessages();
   game.wanted.setLevel(4, 30, 298);
   const cops = [
-    [44, 297.8],
-    [57, 302.2],
-    [72, 298.2],
+    [41, 297.6],
+    [50, 302.0],
+    [63, 298.0],
   ];
   for (const [x, z] of cops) {
     const c = game.police.spawnPursuitCar();
@@ -64,8 +64,8 @@ function chase(game, stepDt) {
   // Traffic both ways on Ocean Drive.
   laneCar(game, 'marlin', -70, 5.25, true, 0x2c3e50, 11);
   laneCar(game, 'coaster', -140, 1.9, true, 0xf1f1f1, 10);
-  laneCar(game, 'pip', -40, 1.9, false, 0xf94144, 11);
-  laneCar(game, 'cab', -95, 5.25, false, 0xffc300, 12);
+  laneCar(game, 'pip', -150, 1.9, false, 0xf94144, 11);
+  laneCar(game, 'cab', -70, 5.25, false, 0xffc300, 12);
   laneCar(game, 'dune', -160, 1.9, false, 0x6b705c, 11);
   laneCar(game, 'marlin', 120, 5.25, false, 0xecf0f1, 11);
   for (let i = 0; i < 14; i += 1) game.pedSystem.spawnCivilianNear(car.position);
