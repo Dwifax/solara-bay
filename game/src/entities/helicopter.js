@@ -103,7 +103,7 @@ export class Helicopter {
     this.spotX += (lx - this.spotX) * damp(1.6, dt);
     this.spotZ += (lz - this.spotZ) * damp(1.6, dt);
     this.spot.target.position.set(this.spotX, 0, this.spotZ);
-    this.spot.intensity = night * 900;
+    this.spot.intensity = night * 260;
     const bx = this.spotX - this.position.x;
     const bz = this.spotZ - this.position.z;
     const by = -this.position.y;

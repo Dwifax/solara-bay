@@ -14,8 +14,11 @@ try {
   for (const shot of shots) {
     if (only && shot.name !== only) continue;
     browser.logs.length = 0;
-    await browser.goto(`http://localhost:8080/index.html${shot.query}`);
-    await browser.waitFor('window.__shotReady === true', 90000);
+    await browser.goto('about:blank');
+    await browser.waitFor('location.href === "about:blank"', 10000);
+    const url = `http://localhost:8080/index.html${shot.query}`;
+    await browser.goto(url);
+    await browser.waitFor(`location.href === ${JSON.stringify(url)} && window.__shotReady === true`, 90000);
     await delay(400);
     let quality = 92;
     let data = await browser.screenshot('jpeg', quality);

@@ -49,8 +49,13 @@ export function createVehicleEffects(game) {
         for (const s of [-1, 1]) effects.tyreSmoke(v.position.x - f.x * back + rx * s * 0.8, v.position.z - f.z * back + rz * s * 0.8);
       }
     }
-    // Player headlights.
+    // Warn when the player's car is about to blow.
     const pv = game.player.vehicle;
+    if (pv && pv.fireTimer > 0 && !pv.destroyed && !pv.warned) {
+      pv.warned = true;
+      game.ui?.notify('Your car is <span class="hl">on fire</span>! Press <b>F</b> to get out!', 4);
+    }
+    // Player headlights.
     const night = game.tod.state.night;
     if (pv && night > 0.3 && !pv.destroyed) {
       pv.headlights = true;
