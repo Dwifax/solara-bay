@@ -6,8 +6,10 @@ import { createAudio } from './audio.js';
 import { updateTraffic, createTraffic } from '../systems/traffic.js';
 import { updateWanted } from '../systems/wanted.js';
 import { updateMissions } from '../systems/missions.js';
+import { createPoliceSystem } from '../systems/police.js';
 import { renderHUD } from '../ui/hud.js';
 import { MISSIONS } from '../data/missions.js';
+import { createVehicle } from '../entities/vehicle.js';
 
 export function createGame(canvas) {
   const renderer = createRenderer(canvas);
@@ -17,12 +19,21 @@ export function createGame(canvas) {
   const city = generateCity(random, renderer);
   const player = createPlayer(city);
   const traffic = createTraffic(city, random, 15);
+  const vehicles = [];
+
+  // Create parked vehicles
+  for (const lot of city.parkingLots) {
+    if (random() < 0.6) {
+      vehicles.push(createVehicle(lot.x + 20, lot.y + 20, Math.floor(random() * 4)));
+    }
+  }
 
   let menuToggle = false;
   const gameState = {
     player,
     city,
     traffic,
+    vehicles,
     audio,
     money: 1000,
     health: 100,
@@ -35,6 +46,8 @@ export function createGame(canvas) {
     isPaused: false,
     screenMode: 'game' // game, menu, pause
   };
+
+  const police = createPoliceSystem(gameState, city, random);
 
   player.x = city.playerStart.x;
   player.y = city.playerStart.y;
@@ -51,12 +64,36 @@ export function createGame(canvas) {
 
       gameState.time += dt;
 
-      player.update(dt, actions, city);
+      // Check vehicle entry
+      for (const v of vehicles) {
+        const dist = Math.hypot(v.x - player.x, v.y - player.y);
+        if (dist < 20 && actions.interact) {
+          player.inVehicle = true;
+          player.vehicle = v;
+          v.occupied = true;
+          v.driver = player;
+        }
+      }
+
+      if (player.inVehicle && player.vehicle) {
+        player.vehicle.update(dt, actions, city);
+        player.x = player.vehicle.x;
+        player.y = player.vehicle.y;
+        if (actions.interact) {
+          player.inVehicle = false;
+          player.vehicle.occupied = false;
+          player.vehicle = null;
+        }
+      } else {
+        player.update(dt, actions, city);
+      }
+
       updateTraffic(traffic, dt, city, player);
+      police.update(dt, player, city);
       updateWanted(gameState, player, city);
       updateMissions(gameState, player, dt);
 
-      player.health = Math.max(0, player.health - (actions.fire ? dt * 20 : 0));
+      player.health = Math.max(0, player.health - (actions.fire ? dt * 5 : 0));
       if (player.health <= 0) gameState.screenMode = 'gameover';
     },
 
@@ -107,14 +144,35 @@ export function createGame(canvas) {
         renderer.drawRect(water.x, water.y, water.width, water.height, '#2a5a9a');
       }
 
+      // Draw vehicles
+      for (const v of vehicles) {
+        const size = 20;
+        const angle = v.angle;
+        ctx.save();
+        ctx.translate(v.x, v.y);
+        ctx.rotate(angle);
+        renderer.drawRect(-size / 2, -size / 2, size, size, v.spec.color);
+        ctx.restore();
+      }
+
       // Draw traffic
       for (const car of traffic) {
-        const size = 20;
+        const size = 15;
         renderer.drawRect(car.x - size / 2, car.y - size / 2, size, size, car.color);
       }
 
+      // Draw police
+      for (const car of police.units) {
+        const size = 18;
+        renderer.drawRect(car.x - size / 2, car.y - size / 2, size, size, '#0066ff');
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(car.x - size / 2, car.y - size / 2, size, size);
+      }
+
       // Draw player
-      renderer.drawCircle(player.x, player.y, 8, player.inVehicle ? '#f00' : '#0f0');
+      const psize = player.inVehicle ? 10 : 8;
+      renderer.drawCircle(player.x, player.y, psize, player.inVehicle ? '#ff00ff' : '#00ff00');
 
       ctx.restore();
 
