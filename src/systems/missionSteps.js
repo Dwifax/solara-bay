@@ -291,7 +291,12 @@ export const STEP_HANDLERS = {
       s.marker.group.position.y = v.position.y + (v.model.roofY ?? 1.5);
       ctx.gps(v.position.x, v.position.z);
       const p = playerPos(game);
-      if (dist2d(p.x, p.z, v.position.x, v.position.z) > step.loseDistance) return { fail: 'The target got away.' };
+      const gap = dist2d(p.x, p.z, v.position.x, v.position.z);
+      if (gap < step.loseDistance * 0.6) s.engaged = true;
+      if (!s.engaged) {
+        // The target waits until the player is close enough to give chase.
+        v.driver.cruise = gap > step.loseDistance * 0.8 ? 0 : (step.target.cruise ?? 20) / 1.7;
+      } else if (gap > step.loseDistance) return { fail: 'The target got away.' };
       const disabled = v.destroyed || v.sunk || v.health < v.maxHealth * 0.45;
       ctx.targetHealth(v.health / v.maxHealth);
       if (disabled) {
@@ -388,7 +393,8 @@ export const STEP_HANDLERS = {
       s.marker.group.position.y = v.position.y + 2.6;
       const p = playerPos(game);
       const d = dist2d(p.x, p.z, v.position.x, v.position.z);
-      if (d > 220) return { fail: 'You abandoned Dez.' };
+      if (d < 60) s.engaged = true;
+      if (s.engaged && d > 220) return { fail: 'You abandoned Dez.' };
       ctx.targetHealth(v.health / v.maxHealth, 'Van');
       const driver = v.driver;
       const progress = 1 - ((driver.route ? driver.route.length : 0) + 1) / s.total;
@@ -411,8 +417,10 @@ export const STEP_HANDLERS = {
         ctx.objective('Clear the ~ambush~!');
         ctx.counter(`${threat.length} left`);
       } else {
-        driver.cruise = d > 70 ? 3 : 11;
+        driver.cruise = d > 70 ? (s.engaged ? 3 : 0) : 11;
         ctx.objective(d > 70 ? 'Catch up with ~Dez~.' : step.text);
+        if (d > 70) ctx.gps(v.position.x, v.position.z);
+        else ctx.clearGps();
         ctx.counter(null);
       }
       if (driver.finished || dist2d(v.position.x, v.position.z, s.goal.x, s.goal.z) < 12) {

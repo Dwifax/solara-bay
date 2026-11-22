@@ -28,7 +28,7 @@ if (shot) {
     hideLoading();
     let painted = 0;
     function paint() {
-      game.renderFrame(1 / 60);
+      game.renderFrame(painted === 0 ? 1 / 60 : 0);
       painted += 1;
       if (painted < 3) requestAnimationFrame(paint);
       else window.__shotReady = true;

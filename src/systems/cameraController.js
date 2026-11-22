@@ -54,9 +54,9 @@ export function createCameraController(camera, collision) {
       fov = 62 + clamp(vehicle.speed / 40, 0, 1) * 14;
     } else {
       const aim = player.aim;
-      distance = lerp(4.4, 2.3, aim);
-      height = lerp(1.55, 1.6, aim);
-      side = lerp(0, 0.75, aim);
+      distance = lerp(4.4, 3.0, aim);
+      height = lerp(1.55, 1.68, aim);
+      side = lerp(0, 0.9, aim);
       pivot.set(player.position.x, player.position.y + height, player.position.z);
       fov = lerp(62, 50, aim);
       if (player.swimming) pivot.y = player.position.y + 1.2;

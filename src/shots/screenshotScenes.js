@@ -130,39 +130,60 @@ function shootout(game, stepDt) {
   quietStart(game);
   game.missions.load({ completed: ['homecoming', 'wheelwoman', 'coldcargo', 'papertrail'] });
   game.economy.load({ money: 9850, respect: 1200, ownedCars: [] });
-  game.settings.difficulty = 0.02;
+  game.settings.difficulty = 0.05;
   game.player.giveWeapon('pistol', 60);
   game.player.giveWeapon('smg', 180);
   game.player.giveWeapon('shotgun', 24);
   game.player.armor = 85;
-  game.tod.state.hour = 18.85;
+  game.player.health = 72;
+  game.tod.state.hour = 18.7;
   game.missions.forceStart('gullseason');
   game.missions.jumpToStep(2);
   game.ui.hud.clearMessages();
+  game.ui.dialogue.clear();
   game.player.selectWeapon('smg');
   const p = game.player;
-  p.position.set(553, 0, -167);
-  p.heading = Math.PI - 0.25;
-  game.cameraCtl.state.yaw = Math.PI - 0.3;
-  game.cameraCtl.state.pitch = 0.08;
-  const cover = game.vehicleSystem.spawn('dune', 549, -175, 0.4, 0x8d99ae);
+  p.position.set(510, 0, -200.5);
+  p.heading = Math.PI / 2;
+  const cover = game.vehicleSystem.spawn('dune', 519, -205, Math.PI / 2 - 0.35, 0xe9c46a);
   cover.persistent = true;
+  cover.health = 300;
+  const wreck = game.vehicleSystem.spawn('marlin', 571, -196, -Math.PI / 2 + 0.5, 0x2c3e50);
+  wreck.persistent = true;
+  wreck.health = 150;
+  // Keep the gang on the road in front of the player.
+  const gang = game.peds.filter((e) => e.role === 'gang');
+  const spots = [
+    [530, -193.5],
+    [537, -198.5],
+    [545, -191.5],
+    [556, -196.5],
+    [568, -190.5],
+  ];
+  gang.forEach((g, i) => {
+    const [x, z] = spots[i % spots.length];
+    g.position.set(x, 0, z);
+    g.ai.post = { x, z };
+    g.ai.range = 11;
+  });
   const original = game.controller.update;
   game.controller.update = (dt) => {
     p.aiming = true;
     p.updateOnFoot(dt, { x: 0, z: 0 }, false, false, game.cameraCtl.state.yaw, game.city.collision);
   };
-  // Let the fight develop: fire bursts at the closest gang member.
-  for (let i = 0; i < 200; i += 1) {
+  game.cameraCtl.state.yaw = Math.PI / 2 - 0.16;
+  game.cameraCtl.state.pitch = 0.05;
+  for (let i = 0; i < 150; i += 1) {
     game.step(stepDt);
     if (i % 4 === 0) game.renderFrame(stepDt * 4);
-    if (i > 60 && i % 7 === 0) {
-      const targets = game.peds.filter((e) => e.role === 'gang' && !e.dead);
-      if (targets.length > 2 && i < 150) targets[0].takeDamage(200, 'player', game.events);
-    }
+    if (i === 90) gang[0]?.takeDamage(300, 'player', game.events);
+    if (i === 110) gang[3]?.takeDamage(300, 'player', game.events);
+    p.health = Math.max(p.health, 70);
   }
   game.controller.update = original;
-  // Final frame: firing.
+  game.ui.dialogue.hold({ who: 'gull', text: 'Nobody walks into MY port! Light her up!' });
+  game.renderFrame(stepDt);
+  for (const g of gang) if (!g.dead) game.npcCombat.shoot(g, p);
   game.player.fireCooldown = 0;
   game.combat.firePlayerWeapon();
 }
