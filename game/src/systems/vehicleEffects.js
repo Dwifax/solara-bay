@@ -19,7 +19,22 @@ export function createVehicleEffects(game) {
     if (impact > 6) effects.impactSparks(x, 0.8, z);
   });
 
+  /** Tyre marks from the rear wheels of every sliding car near the camera. */
+  function layTyreMarks() {
+    const cam = game.camera.position;
+    for (const v of game.vehicles) {
+      if (!v.drifting && !(v.controls.handbrake && Math.abs(v.forwardSpeed) > 6) && !(v.controls.brake && v.speed > 14 && v.driver === 'player')) continue;
+      if (v.sunk || dist2d(v.position.x, v.position.z, cam.x, cam.z) > 90) continue;
+      const f = v.forward();
+      const back = v.spec.length / 2 - 0.85;
+      const side = v.spec.width / 2 - 0.15;
+      game.skidMarks.mark(`${v.id}L`, v.position.x - f.x * back - f.z * side, v.position.y, v.position.z - f.z * back + f.x * side);
+      game.skidMarks.mark(`${v.id}R`, v.position.x - f.x * back + f.z * side, v.position.y, v.position.z - f.z * back - f.x * side);
+    }
+  }
+
   function update(dt) {
+    layTyreMarks();
     smokeTimer += dt;
     const emit = smokeTimer > 0.05;
     if (emit) smokeTimer = 0;

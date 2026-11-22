@@ -12,6 +12,7 @@ import { createWater } from './water.js';
 import { buildVegetation } from './vegetation.js';
 import { buildStreetLights, buildTrafficLights } from './streetProps.js';
 import { buildLandmarks } from './landmarks.js';
+import { createBoats } from './boats.js';
 
 const PALM_STREETS = { rows: [3, 0, -3], cols: [-1, -4, 2] };
 
@@ -95,6 +96,7 @@ export function generateCity(scene, seed) {
   const signals = buildTrafficLights(scene, network);
   const landmarks = buildLandmarks(scene, collision, rng, blocks);
   const water = createWater(scene);
+  const boats = createBoats(scene);
   return {
     seed,
     network,
@@ -103,6 +105,7 @@ export function generateCity(scene, seed) {
     signals,
     landmarks,
     water,
+    boats,
     lamps,
     generated,
     constants: { BLOCK, ROAD_HALF, CHANNEL },

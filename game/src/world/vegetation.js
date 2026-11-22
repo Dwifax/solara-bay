@@ -1,7 +1,7 @@
 // Palm trees and leafy trees: one merged model each, drawn as instanced meshes with random
 // heading, height and lean, planted along the boulevards, the beach, parks and yards.
 import * as THREE from 'three';
-import { box, cylinder, mergeGeometries, paint } from '../render/geometryUtils.js';
+import { cylinder, mergeGeometries, paint } from '../render/geometryUtils.js';
 import { vertexColorMaterial } from '../render/cityMaterials.js';
 
 /** A curved palm: a segmented trunk leaning in +x and a crown of drooping fronds. */
@@ -97,4 +97,3 @@ export function buildVegetation(scene, plan, rng, collision) {
   return { palmCount: palms.length };
 }
 
-export { box };

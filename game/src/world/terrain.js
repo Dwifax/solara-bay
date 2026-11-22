@@ -2,7 +2,7 @@
 // hills that frame the city to the north and west (with scattered hillside houses that light up
 // at night). Invisible walls keep the player inside the playable map.
 import * as THREE from 'three';
-import { paint, mergeGeometries, box } from '../render/geometryUtils.js';
+import { mergeGeometries, box } from '../render/geometryUtils.js';
 import { vertexColorMaterial, createNightGlowMaterial } from '../render/cityMaterials.js';
 import { BEACH, CHANNEL, DOCKS_LAND, WORLD_BOUNDS, groundHeight, BRIDGE_ROWS, BLOCK, ROAD_HALF } from './cityLayout.js';
 import { mixColor, smoothstep } from '../core/mathUtils.js';
@@ -113,4 +113,3 @@ export function buildTerrain(scene, collision, rng) {
   return { hillMesh };
 }
 
-export { paint };

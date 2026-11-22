@@ -4,8 +4,6 @@
 
 const PI = Math.PI;
 
-const GULL_OUTFIT = 'gang';
-
 export const MISSIONS = [
   {
     id: 'homecoming',
@@ -270,4 +268,3 @@ export const MISSIONS = [
   },
 ];
 
-export { GULL_OUTFIT };
