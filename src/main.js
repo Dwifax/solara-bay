@@ -2,7 +2,6 @@
 // ?shot=<scene> (or #shot=<scene>), stages a deterministic screenshot scene instead.
 import { createGame } from './core/game.js';
 import { startGameLoop, STEP } from './core/gameLoop.js';
-import { stageShot } from './shots/screenshotScenes.js';
 import { createRandom } from './core/random.js';
 
 const canvas = document.getElementById('game');
@@ -24,17 +23,19 @@ function hideLoading() {
 
 if (shot) {
   document.body.classList.add('shot-mode');
-  stageShot(shot, game, STEP).then(() => {
-    hideLoading();
-    let painted = 0;
-    function paint() {
-      game.renderFrame(painted === 0 ? 1 / 60 : 0);
-      painted += 1;
-      if (painted < 3) requestAnimationFrame(paint);
-      else window.__shotReady = true;
-    }
-    requestAnimationFrame(paint);
-  });
+  import('./shots/screenshotScenes.js')
+    .then(({ stageShot }) => stageShot(shot, game, STEP))
+    .then(() => {
+      hideLoading();
+      let painted = 0;
+      function paint() {
+        game.renderFrame(painted === 0 ? 1 / 60 : 0);
+        painted += 1;
+        if (painted < 3) requestAnimationFrame(paint);
+        else window.__shotReady = true;
+      }
+      requestAnimationFrame(paint);
+    });
 } else {
   game.flow.showTitle();
   canvas.addEventListener('click', () => {
