@@ -16,7 +16,7 @@ const glowMaterials = [];
  * A facade material. `cell` is the window grid size in metres (horizontal, vertical), `frame` the
  * wall margin around each pane (0..0.5), `glass` how much of each pane shows sky reflection.
  */
-export function createFacadeMaterial({ cell = [3.2, 3.6], frame = [0.18, 0.22], glass = 0.6, glassColor = 0x5f7f99, litColor = 0xffd9a0, litShare = 0.45, ground = 4, roughness = 0.75, metalness = 0.05 }) {
+export function createFacadeMaterial({ cell = [3.2, 3.6], frame = [0.18, 0.22], glass = 0.6, glassColor = 0x5f7f99, litColor = 0xffc27a, litShare = 0.4, ground = 4, roughness = 0.75, metalness = 0.05 }) {
   const material = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness, metalness });
   const local = {
     uCell: { value: new THREE.Vector2(cell[0], cell[1]) },
@@ -79,7 +79,7 @@ export function createFacadeMaterial({ cell = [3.2, 3.6], frame = [0.18, 0.22], 
       .replace(
         '#include <emissivemap_fragment>',
         `#include <emissivemap_fragment>
-        totalEmissiveRadiance += uLit * bLit * (0.7 + 0.6 * bRnd);`,
+        totalEmissiveRadiance += uLit * bLit * (0.32 + 0.4 * bRnd);`,
       );
   };
   return material;
@@ -99,6 +99,16 @@ export function createNightGlowMaterial(color, { additive = false, opacity = 1, 
   material.userData.dayLevel = dayLevel;
   material.userData.baseOpacity = opacity;
   material.userData.additive = additive;
+  glowMaterials.push(material);
+  return material;
+}
+
+/** Fade any additive material (points, sprites) in with the night. */
+export function registerNightMaterial(material, opacity) {
+  material.userData.additive = true;
+  material.userData.baseOpacity = opacity;
+  material.userData.dayLevel = 0;
+  material.userData.baseColor = material.color.clone();
   glowMaterials.push(material);
   return material;
 }

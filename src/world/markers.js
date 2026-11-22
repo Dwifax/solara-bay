@@ -58,11 +58,11 @@ export function createMarkers(scene) {
     group.position.set(x, y, z);
     const col = new THREE.Color(color);
     if (kind === 'column' || kind === 'checkpoint') {
-      const mat = new THREE.MeshBasicMaterial({ color: col, map: columnTex, transparent: true, opacity: 0.32, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
+      const mat = new THREE.MeshBasicMaterial({ color: col, map: columnTex, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, fog: false });
       const column = new THREE.Mesh(columnGeo, mat);
       column.scale.set(radius, kind === 'checkpoint' ? 12 : height, radius);
       group.add(column);
-      const disc = new THREE.Mesh(discGeo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending }));
+      const disc = new THREE.Mesh(discGeo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.12, depthWrite: false, blending: THREE.AdditiveBlending }));
       disc.scale.setScalar(radius);
       disc.position.y = 0.25;
       group.add(disc);
