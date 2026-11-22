@@ -148,23 +148,24 @@ function shootout(game, stepDt) {
   const cover = game.vehicleSystem.spawn('dune', 519, -205, Math.PI / 2 - 0.35, 0xe9c46a);
   cover.persistent = true;
   cover.health = 300;
-  const wreck = game.vehicleSystem.spawn('marlin', 571, -196, -Math.PI / 2 + 0.5, 0x2c3e50);
+  const wreck = game.vehicleSystem.spawn('marlin', 538, -205.5, -Math.PI / 2 + 0.6, 0x2c3e50);
   wreck.persistent = true;
-  wreck.health = 150;
+  wreck.health = 0;
+  wreck.fireTimer = 1e6;
   // Keep the gang on the road in front of the player.
   const gang = game.peds.filter((e) => e.role === 'gang');
   const spots = [
-    [523, -194.5],
-    [529, -198.8],
-    [534, -191.8],
-    [541, -196.2],
-    [552, -192.5],
+    [521, -194.8],
+    [526, -199.2],
+    [531, -192.2],
+    [537, -196.8],
+    [546, -193.2],
   ];
   gang.forEach((g, i) => {
     const [x, z] = spots[i % spots.length];
     g.position.set(x, 0, z);
     g.ai.post = { x, z };
-    g.ai.range = 11;
+    g.ai.range = 7;
   });
   const original = game.controller.update;
   game.controller.update = (dt) => {
