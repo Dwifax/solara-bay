@@ -113,3 +113,10 @@
 .hitmarker i:nth-child(3) { top: 12px; left: 0; width: 8px; height: 2px; }
 .hitmarker i:nth-child(4) { top: 12px; right: 0; width: 8px; height: 2px; }
 .hitmarker.kill i { background: #ff4a3d; }
+/* Letterbox bars while a conversation cutscene plays; the radar and stats step aside. */
+body::before, body::after { content: ''; position: fixed; left: 0; right: 0; height: 0; background: #000; z-index: 5; transition: height 0.5s ease; pointer-events: none; }
+body::before { top: 0; }
+body::after { bottom: 0; }
+body.cutscene::before, body.cutscene::after { height: 11vh; }
+body.cutscene .radar, body.cutscene .top-right, body.cutscene .objective, body.cutscene .help { opacity: 0; transition: opacity 0.4s; }
+body.cutscene .subtitles { z-index: 6; bottom: 3vh; }

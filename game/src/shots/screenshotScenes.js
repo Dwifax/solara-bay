@@ -114,6 +114,7 @@ function onFoot(game, stepDt) {
   juno.persistent = true;
   simulate(game, 30, stepDt);
   game.missions.forceStart('wheelwoman');
+  game.cutscene = null;
   game.ui.hud.clearMessages();
   simulate(game, 40, stepDt);
   p.position.set(-302.2, 0.18, 291.2);

@@ -105,7 +105,16 @@ export function createGame(canvas, uiRoot) {
       const sdt = dt * game.timeScale;
       game.worldTime += sdt;
       game.stats.playTime += dt;
-      if (!game.ui.wheel.open) game.controller.update(sdt);
+      if (game.cutscene) {
+        // Players stand still and turn to each other while the scene plays.
+        const p = game.player;
+        const o = game.cutscene.other;
+        game.cutscene.time += sdt;
+        p.heading = Math.atan2(o.position.x - p.position.x, o.position.z - p.position.z);
+        p.updateOnFoot(sdt, { x: 0, z: 0 }, false, false, p.heading, city.collision);
+        input.takeLook();
+        if (o.dead) game.cutscene = null;
+      } else if (!game.ui.wheel.open) game.controller.update(sdt);
       game.audioDirector.handleRadioKeys();
       game.traffic.update(sdt);
       game.police.update(sdt);
@@ -129,7 +138,9 @@ export function createGame(canvas, uiRoot) {
     const playing = game.state === 'playing';
     const p = game.player.vehicle ? game.player.vehicle.position : game.player.position;
     if (game.state === 'title') game.flow.titleCamera(dt);
+    else if (game.cutscene && playing) game.cameraCtl.conversation(dt, game.player, game.cutscene.other, game.cutscene.time);
     else game.cameraCtl.update(dt, game.player, game.player.vehicle);
+    document.body.classList.toggle('cutscene', !!game.cutscene && playing);
     const focus = game.state === 'title' ? game.camera.position : p;
     tod.update(dt * game.timeScale, focus, !playing && game.state !== 'title');
     const palette = paletteAt(tod.state.hour);
