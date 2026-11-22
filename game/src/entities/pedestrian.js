@@ -12,9 +12,9 @@ let nextPedId = 1;
 export const OUTFITS = {
   cop: (rng) => ({ skin: rng.pick(SKIN_TONES), hair: rng.pick(HAIR_COLORS), shirt: 0x1f3a68, pants: 0x14213d, cap: 0x14213d, shoes: 0x111111 }),
   swat: (rng) => ({ skin: rng.pick(SKIN_TONES), hair: 0x111111, shirt: 0x22262b, pants: 0x22262b, cap: 0x111418, vest: 0x2f353b, shoes: 0x111111, hairStyle: 'bald' }),
-  gang: (rng) => ({ skin: rng.pick(SKIN_TONES), hair: rng.pick(HAIR_COLORS), shirt: rng.pick([0x2a9d8f, 0x1b7f73, 0xe9f5f2]), pants: 0x2b2b2b, cap: rng.chance(0.5) ? 0x2a9d8f : undefined, hairStyle: 'short' }),
+  gang: (rng) => ({ skin: rng.pick(SKIN_TONES), hair: rng.pick(HAIR_COLORS), shirt: rng.pick([0xffffff, 0x1b1b1b]), jacket: rng.pick([0x20b2aa, 0x1b8f86, 0x2ac4b8]), pants: rng.pick([0x2b2b2b, 0x3d3d3d]), cap: rng.chance(0.5) ? 0x13665f : undefined, hairStyle: rng.pick(['short', 'mohawk', 'bald']) }),
   guard: (rng) => ({ skin: rng.pick(SKIN_TONES), hair: 0x111111, shirt: 0x1a1a1a, pants: 0x1a1a1a, vest: 0x2b2b2b, hairStyle: 'bald' }),
-  civilian: (rng) => ({ skin: rng.pick(SKIN_TONES), hair: rng.pick(HAIR_COLORS), shirt: rng.pick(SHIRT_COLORS), pants: rng.pick(PANTS_COLORS), hairStyle: rng.pick(['short', 'short', 'long', 'bald']), cap: rng.chance(0.15) ? rng.pick(SHIRT_COLORS) : undefined, shoes: rng.pick([0x222222, 0xf4f4f4, 0x8b5a2b]) }),
+  civilian: (rng) => ({ skin: rng.pick(SKIN_TONES), hair: rng.pick(HAIR_COLORS), shirt: rng.pick(SHIRT_COLORS), pants: rng.pick(PANTS_COLORS), hairStyle: rng.pick(['short', 'short', 'long', 'long', 'bun', 'bald', 'mohawk']), jacket: rng.chance(0.18) ? rng.pick([0x2b2b2b, 0x6b4f3a, 0x3e5c76, 0xe9e2d0]) : undefined, cap: rng.chance(0.15) ? rng.pick(SHIRT_COLORS) : undefined, shoes: rng.pick([0x222222, 0xf4f4f4, 0x8b5a2b]) }),
 };
 
 export class Pedestrian {
