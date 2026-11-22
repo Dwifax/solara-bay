@@ -64,8 +64,8 @@ export function createEconomy(game) {
 
   function buyWeapon(id) {
     const def = WEAPONS[id];
-    if (level() < def.level) return game.ui?.notify(`Requires respect level ${def.level}.`);
     const player = game.player;
+    if (!player.hasWeapon(id) && level() < def.level) return game.ui?.notify(`Requires respect level ${def.level}.`);
     if (player.hasWeapon(id)) {
       if (!spend(def.ammoPrice)) return;
       player.weapons[id].reserve += def.ammoPack;
@@ -126,7 +126,7 @@ export function createEconomy(game) {
       const items = WEAPON_ORDER.filter((id) => id !== 'fists').map((id) => {
         const d = WEAPONS[id];
         const owned = game.player.hasWeapon(id);
-        return { id, label: owned ? `${d.name} ammo ×${d.ammoPack}` : d.name, price: owned ? d.ammoPrice : d.price, locked: lvl < d.level, need: d.level, action: () => buyWeapon(id) };
+        return { id, label: owned ? `${d.name} ammo ×${d.ammoPack}` : d.name, price: owned ? d.ammoPrice : d.price, locked: !owned && lvl < d.level, need: d.level, action: () => buyWeapon(id) };
       });
       items.push({ id: 'armor', label: 'Body armor', price: ARMOR_PRICE, locked: false, action: buyArmor });
       return items;
