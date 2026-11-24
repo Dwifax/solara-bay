@@ -63,11 +63,11 @@
 .banner.passed .banner-title { color: #ffd23f; -webkit-text-stroke: 2px #3a2400; }
 .banner.passed { background: linear-gradient(90deg, transparent, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0.6) 75%, transparent); padding: 16px 0; }
 .banner.passed .cash { color: #7dff8a; font-weight: bold; font-size: 28px; }
-.banner.passed .resp { color: #ff9ce6; font-weight: bold; font-size: 22px; margin-left: 12px; }
+.banner.passed .cred { color: #ff9ce6; font-weight: bold; font-size: 22px; margin-left: 12px; }
 .banner.failed .banner-title { color: #ff4a3d; -webkit-text-stroke: 2px #3a0400; }
 .banner.failed { background: linear-gradient(90deg, transparent, rgba(0,0,0,0.6) 25%, rgba(0,0,0,0.6) 75%, transparent); padding: 16px 0; }
-.banner.wasted .banner-title { color: #d62828; font-size: 96px; -webkit-text-stroke: 3px #200; }
-.banner.busted .banner-title { color: #4f8cff; font-size: 96px; -webkit-text-stroke: 3px #001033; }
+.banner.flatlined .banner-title { color: #d62828; font-size: 96px; -webkit-text-stroke: 3px #200; }
+.banner.cuffed .banner-title { color: #4f8cff; font-size: 96px; -webkit-text-stroke: 3px #001033; }
 .banner.level .banner-title { color: #ff9ce6; -webkit-text-stroke: 2px #3a0030; font-size: 52px; }
 .banner.count .banner-title { color: #fff; font-size: 110px; -webkit-text-stroke: 3px #000; }
 

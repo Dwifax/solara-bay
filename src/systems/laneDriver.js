@@ -1,6 +1,9 @@
 // An AI driver that follows right-hand lanes along the street graph: it looks ahead along its
 // lane, picks a turn at each junction (or follows a given route), slows for corners, stops at red
-// lights and behind anything in its path, and backs out when stuck.
+// lights and behind anything in its path, and backs out when stuck. With the Rust core loaded the
+// per-step decision (target, speed, pedals, the obstacle scan) runs in traffic.rs via
+// decideNative; route bookkeeping, timers and the horn stay here.
+import { wasmCore } from '../core/wasmCore.js';
 import { clamp, angleDelta, headingTo } from '../core/mathUtils.js';
 import { lanePoint, direction, chooseNextNode, signalStates, STOP_DISTANCE } from './roadNavigation.js';
 import { ROAD_HALF } from '../world/cityLayout.js';
@@ -85,6 +88,34 @@ export class LaneDriver {
     return nearest - v.spec.length / 2;
   }
 
+  /** The lane decision in traffic.rs; returns [advance, throttle, steer, brake, desired, gap, blocker]. */
+  decideNative(game) {
+    const v = this.vehicle;
+    const io = wasmCore.laneInput();
+    io[0] = this.from.x;
+    io[1] = this.from.z;
+    io[2] = this.to.x;
+    io[3] = this.to.z;
+    io[4] = this.next ? 1 : 0;
+    io[5] = this.next ? this.next.x : 0;
+    io[6] = this.next ? this.next.z : 0;
+    io[7] = v.position.x;
+    io[8] = v.position.z;
+    io[9] = v.heading;
+    io[10] = v.forwardSpeed;
+    io[11] = this.lane;
+    io[12] = this.cruise;
+    io[13] = this.panic;
+    io[14] = this.obeySignals ? 1 : 0;
+    io[15] = this.to.neighbors.length;
+    io[16] = game.worldTime;
+    io[17] = this.reverse > 0 ? 1 : 0;
+    io[18] = v.obstacleIndex ?? -1;
+    io[19] = v.spec.width;
+    io[20] = v.spec.length;
+    return wasmCore.laneDrive();
+  }
+
   update(dt, game) {
     const v = this.vehicle;
     const c = v.controls;
@@ -92,6 +123,17 @@ export class LaneDriver {
       c.throttle = 0;
       c.brake = true;
       c.steer = 0;
+      return;
+    }
+    if (wasmCore.ready) {
+      const out = this.decideNative(game);
+      if (out[0] === 1) {
+        this.advance();
+        return;
+      }
+      const [, throttle, steer, brake, desired, gap, blocker] = out;
+      this.blockedBy = blocker === 1 ? 'player' : blocker === 2 ? 'ped' : blocker === 0 ? 'car' : null;
+      this.applyDecision(dt, game, throttle, steer, brake === 1, desired, gap);
       return;
     }
     const d = direction(this.from, this.to);
@@ -126,6 +168,28 @@ export class LaneDriver {
     // Keep a gap to whatever is ahead.
     const gap = this.scanAhead(game, 24);
     if (gap < Infinity) desired = Math.min(desired, Math.max(0, (gap - 2.5) * 0.8));
+    const reversing = this.reverse > 0;
+    const delta = angleDelta(v.heading, headingTo(v.position.x, v.position.z, target.x, target.z));
+    let throttle = 0.1;
+    let brake = false;
+    if (speed < desired - 0.6) throttle = clamp((desired - speed) * 0.35, 0.25, 1);
+    else if (speed > desired + 1.2) {
+      throttle = 0;
+      brake = true;
+    }
+    if (desired < 0.3 && speed < 1) {
+      throttle = 0;
+      brake = true;
+    }
+    if (reversing) this.applyDecision(dt, game, -0.7, -clamp(delta * 2, -1, 1), false, desired, gap);
+    else this.applyDecision(dt, game, throttle, clamp(delta * 2.4, -1, 1), brake, desired, gap);
+  }
+
+  /** Apply a decision: honk at a player in the way, back out when reversing, unstick from walls. */
+  applyDecision(dt, game, throttle, steer, brake, desired, gap) {
+    const v = this.vehicle;
+    const c = v.controls;
+    const speed = v.forwardSpeed;
     if (this.blockedBy === 'player' && gap < 8 && Math.abs(speed) < 1) {
       this.honkTimer += dt;
       if (this.honkTimer > 2.2) {
@@ -136,28 +200,15 @@ export class LaneDriver {
 
     if (this.reverse > 0) {
       this.reverse -= dt;
-      c.throttle = -0.7;
+      c.throttle = throttle;
       c.brake = false;
-      c.steer = -clamp(angleDelta(v.heading, headingTo(v.position.x, v.position.z, target.x, target.z)) * 2, -1, 1);
+      c.steer = steer;
       return;
     }
-    const steer = clamp(angleDelta(v.heading, headingTo(v.position.x, v.position.z, target.x, target.z)) * 2.4, -1, 1);
     c.steer = steer;
     c.handbrake = false;
-    if (speed < desired - 0.6) {
-      c.throttle = clamp((desired - speed) * 0.35, 0.25, 1);
-      c.brake = false;
-    } else if (speed > desired + 1.2) {
-      c.throttle = 0;
-      c.brake = true;
-    } else {
-      c.throttle = 0.1;
-      c.brake = false;
-    }
-    if (desired < 0.3 && speed < 1) {
-      c.throttle = 0;
-      c.brake = true;
-    }
+    c.throttle = throttle;
+    c.brake = brake;
     // Unstick from walls.
     if (desired > 3 && Math.abs(speed) < 0.6) {
       this.stuck += dt;

@@ -1,6 +1,6 @@
 // The on-screen HUD: radar with health and armour, wanted stars, money, weapon and ammo, the
-// mission objective, help prompts, notifications, big banners (mission passed / failed, wasted,
-// busted, level up), district names, the speedometer, radio station, race standings, timers,
+// mission objective, help prompts, notifications, big banners (mission passed / failed, flatlined,
+// cuffed, level up), district names, the speedometer, radio station, race standings, timers,
 // crosshair and a damage vignette.
 import { WEAPONS } from '../data/weapons.js';
 import { DISTRICTS } from '../data/districts.js';
@@ -172,11 +172,11 @@ export function createHud(game, root, baseMap) {
       banner.className = `banner ${style}`;
       bannerTimer = seconds;
     },
-    missionPassed(title, cash, respect, label = 'MISSION PASSED') {
-      api.banner(label, `${title}<br><span class="cash">+${formatMoney(cash)}</span> <span class="resp">+${respect} RESPECT</span>`, 5, 'passed');
+    missionPassed(title, cash, streetCred, label = 'JOB DONE') {
+      api.banner(label, `${title}<br><span class="cash">+${formatMoney(cash)}</span> <span class="cred">+${streetCred} CRED</span>`, 5, 'passed');
     },
     missionFailed(reason) {
-      api.banner('MISSION FAILED', reason, 4.5, 'failed');
+      api.banner('JOB BLOWN', reason, 4.5, 'failed');
     },
     showRadio(info) {
       radioBox.classList.remove('hidden');

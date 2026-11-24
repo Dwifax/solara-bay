@@ -7,14 +7,14 @@ export const CHARACTERS = {
   kiko: { name: 'Kiko', full: 'Kiko Navarro', color: '#7fd8ff', role: "Sol's little brother. Owes the wrong people." },
   benny: { name: 'Benny', full: 'Benicio "Tío Benny" Ruiz', color: '#ffd166', role: 'Your uncle. Runs the bait shop, knows everyone at the docks.' },
   dez: { name: 'Dez', full: 'Desmond "Dez" Okafor', color: '#9cff8a', role: 'Hacker, phone-repair genius, Kiko\'s roommate.' },
-  juno: { name: 'Juno', full: 'Juno Park', color: '#ff9cf2', role: 'Queen of the Ocean Drive night races.' },
+  juno: { name: 'Juno', full: 'Juno Park', color: '#ff9cf2', role: 'Queen of the Halcyon Strand night races.' },
   gull: { name: 'Gull', full: 'Marco "Gull" Gallo', color: '#4fd1c5', role: 'Boss of the Gulls, the dock gang.' },
   vera: { name: 'Vera', full: 'Vera Castellane', color: '#e0b0ff', role: 'Developer. Owns half the skyline, wants the rest.' },
   ward: { name: 'Capt. Ward', full: 'Captain Hollis Ward', color: '#8fb3ff', role: 'SBPD captain with a second paycheck.' },
   radio: { name: 'Dispatch', full: 'SBPD Dispatch', color: '#b8c7d9', role: 'Police radio.' },
 };
 
-/** Respect levels: XP needed and the title shown on the stats screen. */
+/** Street creds: XP needed and the title shown on the stats screen. */
 export const RESPECT_LEVELS = [
   { xp: 0, title: 'Newcomer' },
   { xp: 300, title: 'Street Runner' },

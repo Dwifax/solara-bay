@@ -176,7 +176,7 @@ export function createWantedSystem(game) {
       state.arrestProgress -= dt;
       if (state.arrestProgress > 2.2 && !game.player.dead) {
         state.arrestProgress = 0;
-        events.emit('busted', {});
+        events.emit('cuffed', {});
       }
     }
   }

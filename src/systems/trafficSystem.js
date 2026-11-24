@@ -6,6 +6,7 @@ import { lanePoint, signalStates } from './roadNavigation.js';
 import { TRAFFIC_MIX } from '../data/vehicles.js';
 import { OUTFITS } from '../entities/pedestrian.js';
 import { dist2d } from '../core/mathUtils.js';
+import { wasmCore } from '../core/wasmCore.js';
 
 const MAX_TRAFFIC = 26;
 const MAX_PARKED = 14;
@@ -111,10 +112,48 @@ export function createTrafficSystem(game) {
     }
   });
 
+  /**
+   * Hand every car and person to the Rust obstacle grid that AI drivers scan this step (cars
+   * first, so a car's row is its index in game.vehicles).
+   */
+  function loadObstacles() {
+    const vehicles = game.vehicles;
+    const peds = game.peds;
+    const p = game.player;
+    const rows = wasmCore.obstacleRows(vehicles.length + peds.length + 1);
+    let n = 0;
+    for (let k = 0; k < vehicles.length; k += 1) {
+      const v = vehicles[k];
+      v.obstacleIndex = n;
+      rows[n * 4] = v.position.x;
+      rows[n * 4 + 1] = v.position.z;
+      rows[n * 4 + 2] = v.spec.width / 2;
+      rows[n * 4 + 3] = v.driver === 'player' ? 1 : 0;
+      n += 1;
+    }
+    for (const ped of peds) {
+      if (ped.dead || ped.inVehicle) continue;
+      rows[n * 4] = ped.position.x;
+      rows[n * 4 + 1] = ped.position.z;
+      rows[n * 4 + 2] = 0.4;
+      rows[n * 4 + 3] = 2;
+      n += 1;
+    }
+    if (!p.vehicle && !p.dead) {
+      rows[n * 4] = p.position.x;
+      rows[n * 4 + 1] = p.position.z;
+      rows[n * 4 + 2] = 0.4;
+      rows[n * 4 + 3] = 1;
+      n += 1;
+    }
+    wasmCore.commitObstacles(n);
+  }
+
   function update(dt) {
     const focus = game.player.vehicle ? game.player.vehicle.position : game.player.position;
     const states = signalStates(game.worldTime);
     game.city.signals.update(states.ns, states.ew);
+    if (wasmCore.ready) loadObstacles();
 
     for (const v of game.vehicles) {
       if (v.driver && v.driver.kind === 'traffic') {

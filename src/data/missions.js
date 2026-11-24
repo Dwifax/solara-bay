@@ -11,14 +11,14 @@ export const MISSIONS = [
     giver: 'kiko',
     letter: 'K',
     start: { x: -138, z: 92 },
-    reward: { money: 800, respect: 150 },
+    reward: { money: 800, streetCred: 150 },
     steps: [
       { type: 'dialogue', lines: [
         { who: 'kiko', text: "Sol? It's Kiko. You're really back in Solara Bay?" },
         { who: 'sol', text: 'Landed this morning. You said it was bad. How bad?' },
         { who: 'kiko', text: "The Gulls are circling the Sunset Pier. I'm hiding by the arcade. Come get me. Please." },
       ] },
-      { type: 'enterVehicle', spawn: { car: 'marlin', color: 0x2a9d8f, x: -128, z: 105.2, heading: PI / 2, tag: 'ride' }, text: 'Get in the ~Marlin~ parked outside.' },
+      { type: 'enterVehicle', spawn: { car: 'heron', color: 0x2a9d8f, x: -128, z: 105.2, heading: PI / 2, tag: 'ride' }, text: 'Get in the ~Heron~ parked outside.' },
       { type: 'pickup', ped: { id: 'kiko', x: -148, z: 314, outfit: { skin: 0xc68a5e, hair: 0x1c1410, shirt: 0x3e92cc, pants: 0x3d3d3d, cap: 0xffc857 } }, radius: 13, text: 'Pick up ~Kiko~ at the Sunset Pier.' },
       { type: 'dialogue', lines: [
         { who: 'kiko', text: "Drive. Just drive. They took my phone and my bike." },
@@ -32,7 +32,7 @@ export const MISSIONS = [
         { who: 'benny', text: 'Mija! Four years and not one postcard. Get in here.' },
         { who: 'benny', text: 'Gull is not a talker. But he respects money and nerve. You still drive like a hurricane?' },
         { who: 'sol', text: 'Worse.' },
-        { who: 'benny', text: 'Good. Go see Juno Park on Ocean Drive. Win her race and the whole beach knows your name again.' },
+        { who: 'benny', text: 'Good. Go see Juno Park on Halcyon Strand. Win her race and the whole beach knows your name again.' },
       ] },
     ],
   },
@@ -42,17 +42,17 @@ export const MISSIONS = [
     giver: 'juno',
     letter: 'J',
     start: { x: -300, z: 291 },
-    reward: { money: 1500, respect: 250 },
+    reward: { money: 1500, streetCred: 250 },
     steps: [
       { type: 'dialogue', lines: [
         { who: 'juno', text: "Well, well. Sol Navarro. Heard you retired to somewhere with snow." },
         { who: 'sol', text: 'Heard you never beat my lap record.' },
-        { who: 'juno', text: "Ocean Drive, up through Little Coral, back down to the beach. Loser buys the tacos. Take the Brawler." },
+        { who: 'juno', text: "Halcyon Strand, up through Little Coral, back down to the beach. Loser buys the tacos. Take the Brawler." },
       ] },
       { type: 'enterVehicle', spawn: { car: 'brawler', color: 0xd62828, x: -330, z: 305.2, heading: PI / 2, tag: 'racer' }, text: 'Get in the ~Brawler~ on the start line.' },
       { type: 'race', countdown: 3, rivals: [
-        { car: 'vento', color: 0xff9cf2, x: -330, z: 301.6, skill: 1.0, name: 'Juno' },
-        { car: 'marlin', color: 0x1f3a93, x: -342, z: 305.2, skill: 0.85 },
+        { car: 'vireo', color: 0xff9cf2, x: -330, z: 301.6, skill: 1.0, name: 'Juno' },
+        { car: 'heron', color: 0x1f3a93, x: -342, z: 305.2, skill: 0.85 },
         { car: 'pip', color: 0xf9c74f, x: -342, z: 301.6, skill: 0.8 },
       ], checkpoints: [[-100, 300], [100, 300], [100, 100], [100, 0], [-100, 0], [-300, 0], [-300, 200], [-200, 300]], text: 'Win the race. Pass through the ~checkpoints~.' },
       { type: 'dialogue', lines: [
@@ -67,7 +67,7 @@ export const MISSIONS = [
     giver: 'benny',
     letter: 'B',
     start: { x: 550, z: -92 },
-    reward: { money: 2500, respect: 350 },
+    reward: { money: 2500, streetCred: 350 },
     steps: [
       { type: 'dialogue', lines: [
         { who: 'benny', text: 'The Gulls move their cash in a reefer truck. Under the frozen fish. Every Thursday.' },
@@ -95,7 +95,7 @@ export const MISSIONS = [
     giver: 'dez',
     letter: 'D',
     start: { x: 108, z: -50 },
-    reward: { money: 2000, respect: 300 },
+    reward: { money: 2000, streetCred: 300 },
     steps: [
       { type: 'dialogue', lines: [
         { who: 'dez', text: "Sol! Kiko talks about you like you're a superhero. I made you a playlist." },
@@ -103,7 +103,7 @@ export const MISSIONS = [
         { who: 'dez', text: "The courier just left Riverside. Stop that car, grab the ledger. I'll do the reading." },
       ] },
       { type: 'getVehicle', text: 'Get a ~car~.' },
-      { type: 'chase', target: { car: 'marlin', color: 0x111111, x: 205, z: -98.1, heading: PI / 2, cruise: 21, tag: 'courier' }, mode: 'disable', loseDistance: 260, text: 'Ram the ~courier~ until the car stops.' },
+      { type: 'chase', target: { car: 'heron', color: 0x111111, x: 205, z: -98.1, heading: PI / 2, cruise: 21, tag: 'courier' }, mode: 'disable', loseDistance: 260, text: 'Ram the ~courier~ until the car stops.' },
       { type: 'collect', at: 'courier', item: 'ledger', text: 'Grab the ~ledger~.' },
       { type: 'goto', x: 108, z: -50, radius: 6, text: 'Bring the ledger to ~Dez~.' },
       { type: 'dialogue', lines: [
@@ -119,7 +119,7 @@ export const MISSIONS = [
     giver: 'benny',
     letter: 'B',
     start: { x: 550, z: -92 },
-    reward: { money: 4000, respect: 500 },
+    reward: { money: 4000, streetCred: 500 },
     quiet: true,
     steps: [
       { type: 'dialogue', lines: [
@@ -155,7 +155,7 @@ export const MISSIONS = [
     giver: 'dez',
     letter: 'D',
     start: { x: 108, z: -50 },
-    reward: { money: 3000, respect: 450 },
+    reward: { money: 3000, streetCred: 450 },
     quiet: true,
     steps: [
       { type: 'dialogue', lines: [
@@ -163,7 +163,7 @@ export const MISSIONS = [
         { who: 'dez', text: "My cousin has a villa up in Vista Hills. I drive the van, you keep the Gulls off me. Deal?" },
       ] },
       { type: 'getVehicle', text: 'Get a ~car~ to follow Dez.' },
-      { type: 'escort', vehicle: { car: 'coaster', color: 0xf1f1f1, x: 101.9, z: -62, heading: PI, tag: 'dezvan' }, from: '1,-1', to: '-2,-5', ambushes: [0.35, 0.72], text: 'Follow and protect ~Dez~\'s van.' },
+      { type: 'escort', vehicle: { car: 'surfline', color: 0xf1f1f1, x: 101.9, z: -62, heading: PI, tag: 'dezvan' }, from: '1,-1', to: '-2,-5', ambushes: [0.35, 0.72], text: 'Follow and protect ~Dez~\'s van.' },
       { type: 'dialogue', lines: [
         { who: 'dez', text: "Servers are safe. And I found the jackpot: a vault in Castellane Tower. Paper records. She doesn't trust clouds." },
         { who: 'sol', text: "Then we go get the paper." },
@@ -176,7 +176,7 @@ export const MISSIONS = [
     giver: 'benny',
     letter: 'B',
     start: { x: 550, z: -92 },
-    reward: { money: 15000, respect: 900 },
+    reward: { money: 15000, streetCred: 900 },
     quiet: true,
     steps: [
       { type: 'dialogue', lines: [
@@ -207,7 +207,7 @@ export const MISSIONS = [
     giver: 'benny',
     letter: 'B',
     start: { x: 550, z: -92 },
-    reward: { money: 5000, respect: 700 },
+    reward: { money: 5000, streetCred: 700 },
     steps: [
       { type: 'dialogue', lines: [
         { who: 'ward', text: '(phone) Miss Navarro. Captain Ward. You have something of Mrs. Castellane\'s. Let\'s be adults.' },
@@ -235,16 +235,16 @@ export const MISSIONS = [
     giver: 'kiko',
     letter: 'K',
     start: { x: -138, z: 92 },
-    reward: { money: 25000, respect: 1500 },
+    reward: { money: 25000, streetCred: 1500 },
     quiet: true,
     steps: [
       { type: 'dialogue', lines: [
-        { who: 'kiko', text: "Vera's leaving the tower right now. Black Vento, bodyguards behind her." },
+        { who: 'kiko', text: "Vera's leaving the tower right now. Black Vireo, bodyguards behind her." },
         { who: 'sol', text: "Stay here, Kiko. I mean it." },
         { who: 'kiko', text: "I owe you one sister-sized favour. Go." },
       ] },
       { type: 'getVehicle', text: 'Get a ~car~.' },
-      { type: 'chase', target: { car: 'vento', color: 0x0b0b0b, x: -70, z: -201.9, heading: -PI / 2, cruise: 23, tag: 'vera' }, mode: 'disable', loseDistance: 280, hunters: 2, text: "Stop ~Vera's~ car." },
+      { type: 'chase', target: { car: 'vireo', color: 0x0b0b0b, x: -70, z: -201.9, heading: -PI / 2, cruise: 23, tag: 'vera' }, mode: 'disable', loseDistance: 280, hunters: 2, text: "Stop ~Vera's~ car." },
       { type: 'dialogue', lines: [
         { who: 'vera', text: "(over the speaker) You're a driver, Miss Navarro. I build cities. Walk away." },
         { who: 'sol', text: 'You burn them down too.' },

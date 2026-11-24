@@ -1,5 +1,5 @@
 // Deterministic screenshot scenes (?shot=name): each sets up a moment of real play with the
-// game's own systems (a police chase at dusk, meeting Juno on Ocean Drive, a dockside shootout,
+// game's own systems (a police chase at dusk, meeting Juno on Halcyon Strand, a dockside shootout,
 // the map, the title screen), simulates it forward in fixed steps and leaves it for capture.
 import { createRandom } from '../core/random.js';
 import { LaneDriver } from '../systems/laneDriver.js';
@@ -17,7 +17,7 @@ function quietStart(game) {
   game.input.releaseLock();
 }
 
-/** A car on a lane of Ocean Drive (row j = 3) driving toward node column `toI`. */
+/** A car on a lane of Halcyon Strand (row j = 3) driving toward node column `toI`. */
 function laneCar(game, id, x, lane, westbound, color, cruise) {
   const net = game.city.network;
   const i = Math.floor(x / 100);
@@ -31,18 +31,18 @@ function laneCar(game, id, x, lane, westbound, color, cruise) {
   return v;
 }
 
-/** A police chase down Ocean Drive at sunset: four stars, helicopter, traffic, mission HUD. */
+/** A police chase down Halcyon Strand at sunset: four stars, helicopter, traffic, mission HUD. */
 function chase(game, stepDt) {
   quietStart(game);
   game.missions.load({ completed: ['homecoming', 'wheelwoman', 'coldcargo', 'papertrail', 'gullseason', 'sunsetescort', 'glasshouse'] });
-  game.economy.load({ money: 48250, respect: 3900, ownedCars: [] });
+  game.economy.load({ money: 48250, streetCred: 3900, ownedCars: [] });
   game.player.giveWeapon('pistol', 48);
   game.player.giveWeapon('smg', 120);
   game.player.selectWeapon('smg');
   game.player.armor = 60;
   game.player.health = 78;
   game.tod.state.hour = Number(new URLSearchParams(location.search).get('hour') ?? 19.3);
-  const car = game.vehicleSystem.spawn('vento', 30, 298.1, -Math.PI / 2, 0xffd400);
+  const car = game.vehicleSystem.spawn('vireo', 30, 298.1, -Math.PI / 2, 0xffd400);
   game.controller.enterVehicle(car);
   car.vx = -28;
   game.missions.forceStart('badgebones');
@@ -61,13 +61,13 @@ function chase(game, stepDt) {
     c.heading = -Math.PI / 2;
     c.vx = -28;
   }
-  // Traffic both ways on Ocean Drive.
-  laneCar(game, 'marlin', -70, 5.25, true, 0x2c3e50, 11);
-  laneCar(game, 'coaster', -140, 1.9, true, 0xf1f1f1, 10);
+  // Traffic both ways on Halcyon Strand.
+  laneCar(game, 'heron', -70, 5.25, true, 0x2c3e50, 11);
+  laneCar(game, 'surfline', -140, 1.9, true, 0xf1f1f1, 10);
   laneCar(game, 'pip', -150, 1.9, false, 0xf94144, 11);
   laneCar(game, 'cab', -70, 5.25, false, 0xffc300, 12);
   laneCar(game, 'dune', -160, 1.9, false, 0x6b705c, 11);
-  laneCar(game, 'marlin', 120, 5.25, false, 0xecf0f1, 11);
+  laneCar(game, 'heron', 120, 5.25, false, 0xecf0f1, 11);
   for (let i = 0; i < 14; i += 1) game.pedSystem.spawnCivilianNear(car.position);
   const original = game.controller.update;
   game.controller.update = () => {
@@ -87,16 +87,16 @@ function chase(game, stepDt) {
     }
   }
   game.controller.update = original;
-  game.ui.dialogue.hold({ who: 'radio', text: 'All units: yellow Vento westbound on Ocean Drive. Air support has eyes on the suspect.' });
+  game.ui.dialogue.hold({ who: 'radio', text: 'All units: yellow Vireo westbound on Halcyon Strand. Air support has eyes on the suspect.' });
   game.wanted.state.seen = true;
   game.cameraCtl.state.idleTime = 0;
 }
 
-/** Meeting Juno on Ocean Drive before the race, people on the sidewalk. */
+/** Meeting Juno on Halcyon Strand before the race, people on the sidewalk. */
 function onFoot(game, stepDt) {
   quietStart(game);
   game.missions.load({ completed: ['homecoming'] });
-  game.economy.load({ money: 2140, respect: 260, ownedCars: [] });
+  game.economy.load({ money: 2140, streetCred: 260, ownedCars: [] });
   game.player.giveWeapon('pistol', 36);
   game.tod.state.hour = 18.15;
   const p = game.player;
@@ -110,7 +110,7 @@ function onFoot(game, stepDt) {
     const ped = game.pedSystem.spawnPed('civilian', -292 + i * 8 + rng.range(-2, 2), 290 + rng.range(-1.5, 1.5));
     game.pedSystem.startWalking(ped);
   }
-  const juno = game.vehicleSystem.spawn('vento', -318, 305.2, Math.PI / 2, 0xff9cf2);
+  const juno = game.vehicleSystem.spawn('vireo', -318, 305.2, Math.PI / 2, 0xff9cf2);
   juno.persistent = true;
   simulate(game, 30, stepDt);
   game.missions.forceStart('wheelwoman');
@@ -121,8 +121,8 @@ function onFoot(game, stepDt) {
   p.heading = 1.85;
   game.cameraCtl.state.yaw = Math.PI / 2 - 0.32;
   game.cameraCtl.state.pitch = 0.08;
-  game.ui.dialogue.hold({ who: 'juno', text: 'Ocean Drive, up through Little Coral, back down to the beach. Loser buys the tacos.' });
-  game.ui.setObjective('Meet ~Juno~ at the start line on Ocean Drive.');
+  game.ui.dialogue.hold({ who: 'juno', text: 'Halcyon Strand, up through Little Coral, back down to the beach. Loser buys the tacos.' });
+  game.ui.setObjective('Meet ~Juno~ at the start line on Halcyon Strand.');
   simulate(game, 12, stepDt);
 }
 
@@ -130,7 +130,7 @@ function onFoot(game, stepDt) {
 function shootout(game, stepDt) {
   quietStart(game);
   game.missions.load({ completed: ['homecoming', 'wheelwoman', 'coldcargo', 'papertrail'] });
-  game.economy.load({ money: 9850, respect: 1200, ownedCars: [] });
+  game.economy.load({ money: 9850, streetCred: 1200, ownedCars: [] });
   game.settings.difficulty = 0.05;
   game.player.giveWeapon('pistol', 60);
   game.player.giveWeapon('smg', 180);
@@ -149,7 +149,7 @@ function shootout(game, stepDt) {
   const cover = game.vehicleSystem.spawn('dune', 519, -205, Math.PI / 2 - 0.35, 0xe9c46a);
   cover.persistent = true;
   cover.health = 300;
-  const wreck = game.vehicleSystem.spawn('marlin', 538, -205.5, -Math.PI / 2 + 0.6, 0x2c3e50);
+  const wreck = game.vehicleSystem.spawn('heron', 538, -205.5, -Math.PI / 2 + 0.6, 0x2c3e50);
   wreck.persistent = true;
   wreck.health = 0;
   wreck.fireTimer = 1e6;
@@ -193,7 +193,7 @@ function shootout(game, stepDt) {
 function mapScreen(game) {
   quietStart(game);
   game.missions.load({ completed: ['homecoming', 'wheelwoman'] });
-  game.economy.load({ money: 5600, respect: 700, ownedCars: [] });
+  game.economy.load({ money: 5600, streetCred: 700, ownedCars: [] });
   game.player.position.set(-60, 0.2, 120);
   game.state = 'playing';
   game.flow.openMap();

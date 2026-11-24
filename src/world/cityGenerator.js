@@ -13,6 +13,7 @@ import { buildVegetation } from './vegetation.js';
 import { buildStreetLights, buildTrafficLights } from './streetProps.js';
 import { buildLandmarks } from './landmarks.js';
 import { createBoats } from './boats.js';
+import { wasmCore } from '../core/wasmCore.js';
 
 const PALM_STREETS = { rows: [3, 0, -3], cols: [-1, -4, 2] };
 
@@ -21,19 +22,20 @@ function planVegetation(network, blocks, generated, rng) {
   const palms = [];
   const trees = [];
   const bushes = [];
-  for (const edge of network.edges) {
-    if (edge.bridge) continue;
-    const isRow = edge.horizontal && PALM_STREETS.rows.includes(edge.a.j);
-    const isCol = !edge.horizontal && PALM_STREETS.cols.includes(edge.a.i);
-    if (!isRow && !isCol) continue;
-    const nx = -edge.dirZ;
-    const nz = edge.dirX;
-    for (let t = 20; t < edge.length - 18; t += 15) {
-      for (const s of [-1, 1]) {
-        if (edge.a.j === 3 && s * nz > 0 && edge.horizontal) {
-          // Beach side of Ocean Drive: palms on the promenade edge.
-        }
-        palms.push({ x: edge.a.x + edge.dirX * t + nx * s * 9.6, z: edge.a.z + edge.dirZ * t + nz * s * 9.6, y: 0.18, solid: true });
+  if (wasmCore.ready) {
+    // Boulevard palm rows planned by city_layout.rs.
+    const rows = wasmCore.boulevardPalms();
+    for (let k = 0; k < rows.length; k += 2) palms.push({ x: rows[k], z: rows[k + 1], y: 0.18, solid: true });
+  } else {
+    for (const edge of network.edges) {
+      if (edge.bridge) continue;
+      const isRow = edge.horizontal && PALM_STREETS.rows.includes(edge.a.j);
+      const isCol = !edge.horizontal && PALM_STREETS.cols.includes(edge.a.i);
+      if (!isRow && !isCol) continue;
+      const nx = -edge.dirZ;
+      const nz = edge.dirX;
+      for (let t = 20; t < edge.length - 18; t += 15) {
+        for (const s of [-1, 1]) palms.push({ x: edge.a.x + edge.dirX * t + nx * s * 9.6, z: edge.a.z + edge.dirZ * t + nz * s * 9.6, y: 0.18, solid: true });
       }
     }
   }

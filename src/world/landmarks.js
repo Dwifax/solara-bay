@@ -211,7 +211,7 @@ function addBeachProps(parts, rng, collision, glows) {
     parts.push(paint(new THREE.ConeGeometry(1.6, 0.6, 8), c).translate(x, y + 2.6, z));
     parts.push(box(1, 0.04, 2, rng.pick(colors), x + 1.4, y + 0.04, z + 0.6, rng.range(0, 3)));
   }
-  // Promenade benches along Ocean Drive's beach side.
+  // Promenade benches along Halcyon Strand's beach side.
   for (let x = -500; x < 340; x += 24) {
     parts.push(box(2.2, 0.15, 0.6, 0x8a5a3a, x + 12, 0.65, BEACH.minZ - 3));
     parts.push(box(2.2, 0.6, 0.1, 0x8a5a3a, x + 12, 0.95, BEACH.minZ - 2.7));

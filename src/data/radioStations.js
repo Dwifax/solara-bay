@@ -16,7 +16,7 @@ export const RADIO_STATIONS = [
     ],
     minor: true,
     artists: ['Midnight Palms', 'Chrome Lagoon', 'Laser Tide', 'Velvet Grid', 'Sunset Protocol', 'The Neon Pelicans'],
-    words: ['Ocean', 'Drive', 'Neon', 'Heat', 'Coastline', 'Night', 'Signal', 'Static', 'Mirage', 'Horizon', 'Velocity', 'Glow'],
+    words: ['Ocean', 'Drive', 'Neon', 'Heat', 'Coastline', 'Night', 'Signal', 'Static', 'Horizon', 'Velocity', 'Glow'],
   },
   {
     id: 'baybreeze',

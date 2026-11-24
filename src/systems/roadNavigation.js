@@ -1,6 +1,8 @@
 // Lane geometry, traffic signal timing and A* routing over the street graph, shared by traffic,
-// police pursuit and the GPS route on the minimap.
-import { ROAD_HALF } from '../world/cityLayout.js';
+// police pursuit and the GPS route on the minimap. Routing runs in the Rust core
+// (pathfinding.rs) when it is loaded; the A* here is the JavaScript fallback.
+import { ROAD_HALF, nearestNode, nearestRoadPoint } from '../world/cityLayout.js';
+import { wasmCore } from '../core/wasmCore.js';
 
 export const SIGNAL_CYCLE = 24;
 
@@ -53,6 +55,10 @@ export const STOP_DISTANCE = ROAD_HALF + 6.5;
 export function findRoute(network, start, goal) {
   if (!start || !goal) return null;
   if (start === goal) return [start];
+  if (network.native) {
+    const ids = wasmCore.findRoute(start.id, goal.id);
+    return ids ? ids.map((id) => network.nodeList[id]) : null;
+  }
   const open = new Map([[start.id, start]]);
   const came = new Map();
   const g = new Map([[start.id, 0]]);
@@ -89,4 +95,19 @@ export function findRoute(network, start, goal) {
     }
   }
   return null;
+}
+
+/**
+ * A pursuit route for a car at (x, z) facing (fx, fz): from the junction ahead on the street it is
+ * on (never one behind it) to the junction nearest the goal. Returns { goal, route }.
+ */
+export function planPursuitRoute(network, x, z, fx, fz, goalX, goalZ) {
+  if (network.native) {
+    const { goal, ids } = wasmCore.pursuitRoute(x, z, fx, fz, goalX, goalZ);
+    return { goal: network.nodeList[goal], route: ids.length ? ids.map((id) => network.nodeList[id]) : null };
+  }
+  const goal = nearestNode(network, goalX, goalZ);
+  const e = nearestRoadPoint(network, x, z).edge;
+  const aheadB = (e.b.x - x) * fx + (e.b.z - z) * fz;
+  return { goal, route: findRoute(network, aheadB > 0 ? e.b : e.a, goal) };
 }

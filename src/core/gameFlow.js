@@ -1,5 +1,5 @@
 // The game's screens and transitions: title (with a slow cinematic flight over the city), new
-// game and loading, play, pause, map and shop overlays, and the wasted / busted sequence that
+// game and loading, play, pause, map and shop overlays, and the flatlined / cuffed sequence that
 // respawns the player at the hospital or the police station.
 import { LOCATIONS, PARKING_SPOTS } from '../data/locations.js';
 import { dist2d } from './mathUtils.js';
@@ -68,7 +68,7 @@ export function createGameFlow(game) {
   const flow = {
     newGame() {
       clearWorld();
-      game.economy.load({ money: 500, respect: 0, ownedCars: [] });
+      game.economy.load({ money: 500, streetCred: 0, ownedCars: [] });
       game.missions.load({ completed: [] });
       game.activities.load({});
       for (const k of Object.keys(game.stats)) game.stats[k] = 0;
@@ -167,11 +167,11 @@ export function createGameFlow(game) {
         if (input.wasPressed('Escape') || input.wasPressed('KeyP')) flow.pause();
         else if (input.wasPressed('KeyM')) flow.openMap();
         if (game.player.dead && !deadKind) {
-          deadKind = 'wasted';
+          deadKind = 'flatlined';
           deadTimer = 4.5;
-          game.stats.wasted += 1;
-          game.events.emit('wasted', {});
-          game.ui.banner('WASTED', '', 4.2, 'wasted');
+          game.stats.flatlined += 1;
+          game.events.emit('flatlined', {});
+          game.ui.banner('FLATLINED', '', 4.2, 'flatlined');
           document.body.classList.add('dead-fx');
         }
         if (deadKind) {
@@ -188,11 +188,11 @@ export function createGameFlow(game) {
     const kind = deadKind;
     deadKind = null;
     clearWorld();
-    const loc = kind === 'busted' ? LOCATIONS.police : LOCATIONS.hospital;
+    const loc = kind === 'cuffed' ? LOCATIONS.police : LOCATIONS.hospital;
     placePlayer(loc.x, loc.z, loc.heading);
-    const fee = Math.min(kind === 'busted' ? 1500 : 1000, Math.round(game.economy.state.money * (kind === 'busted' ? 0.15 : 0.1)));
+    const fee = Math.min(kind === 'cuffed' ? 1500 : 1000, Math.round(game.economy.state.money * (kind === 'cuffed' ? 0.15 : 0.1)));
     game.economy.state.money -= fee;
-    if (kind === 'busted') {
+    if (kind === 'cuffed') {
       for (const id of Object.keys(game.player.weapons)) {
         const w = game.player.weapons[id];
         w.reserve = Math.floor(w.reserve / 2);
@@ -200,15 +200,15 @@ export function createGameFlow(game) {
     }
     game.tod.state.hour = (game.tod.state.hour + 1.5) % 24;
     game.missions.refreshStartMarker();
-    game.ui.notify(kind === 'busted' ? `Released from SBPD Central. Bail and fines: $${fee}.` : `Patched up at St. Marisol General. Medical bill: $${fee}.`, 6);
+    game.ui.notify(kind === 'cuffed' ? `Released from SBPD Central. Bail and fines: $${fee}.` : `Patched up at St. Marisol General. Medical bill: $${fee}.`, 6);
   }
 
-  game.events.on('busted', () => {
+  game.events.on('cuffed', () => {
     if (deadKind) return;
-    deadKind = 'busted';
+    deadKind = 'cuffed';
     deadTimer = 4;
-    game.stats.busted += 1;
-    game.ui.banner('BUSTED', '', 3.8, 'busted');
+    game.stats.cuffed += 1;
+    game.ui.banner('CUFFED', '', 3.8, 'cuffed');
     document.body.classList.add('dead-fx');
     if (game.player.vehicle) game.controller.exitVehicle(true);
   });

@@ -64,7 +64,7 @@ export function createGame(canvas, uiRoot) {
     state: 'title',
     gps: null,
     waypoint: null,
-    stats: { shotsFired: 0, kills: 0, copsKilled: 0, carsStolen: 0, distanceDriven: 0, distanceWalked: 0, missionsPassed: 0, crimes: 0, escapes: 0, wasted: 0, busted: 0, playTime: 0, shellsFound: 0, racesWon: 0, jobsDone: 0 },
+    stats: { shotsFired: 0, kills: 0, copsKilled: 0, carsStolen: 0, distanceDriven: 0, distanceWalked: 0, missionsPassed: 0, crimes: 0, escapes: 0, flatlined: 0, cuffed: 0, playTime: 0, shellsFound: 0, racesWon: 0, jobsDone: 0 },
     district: null,
   };
 

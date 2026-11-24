@@ -239,7 +239,7 @@ export function createMenus(game, root, handlers) {
         const p = panel(layer, 'STATS');
         const st = game.stats;
         const info = game.economy.levelInfo();
-        el('div', 'respect', p, `<div><b>Respect level ${info.level}</b> · ${info.title}</div><div class="xpbar"><i style="width:${Math.round(info.progress * 100)}%"></i></div><small>${info.xp} / ${info.nextXp} XP</small>`);
+        el('div', 'streetCred', p, `<div><b>Street cred ${info.level}</b> · ${info.title}</div><div class="xpbar"><i style="width:${Math.round(info.progress * 100)}%"></i></div><small>${info.xp} / ${info.nextXp} XP</small>`);
         const done = game.missions.progress.completed;
         const list = el('div', 'mission-list', p);
         for (const m of MISSIONS) el('div', done.includes(m.id) ? 'done' : '', list, `${done.includes(m.id) ? '✔' : '○'} ${m.title}`);
@@ -256,7 +256,7 @@ export function createMenus(game, root, handlers) {
           ['Officers taken down', st.copsKilled],
           ['Shots fired', st.shotsFired],
           ['Escapes from police', st.escapes ?? 0],
-          ['Times wasted / busted', `${st.wasted} / ${st.busted}`],
+          ['Times flatlined / cuffed', `${st.flatlined} / ${st.cuffed}`],
           ['Distance driven', `${(st.distanceDriven / 1000).toFixed(1)} km`],
         ];
         const grid = el('div', 'stat-grid', p);
@@ -271,9 +271,9 @@ export function createMenus(game, root, handlers) {
       kind: 'sub',
       build(layer) {
         const p = panel(layer, kind === 'guns' ? 'BAYLINE ARMS' : 'COASTLINE MOTORS');
-        el('div', 'pause-sub', p, `Cash: <b>${formatMoney(game.economy.state.money)}</b> · Respect level ${game.economy.level()}`);
+        el('div', 'pause-sub', p, `Cash: <b>${formatMoney(game.economy.state.money)}</b> · Street cred ${game.economy.level()}`);
         for (const item of game.economy.catalog(kind)) {
-          const label = `<b>${item.label}</b> <small>${item.locked ? `Unlocks at respect level ${item.need}` : formatMoney(item.price)}</small>`;
+          const label = `<b>${item.label}</b> <small>${item.locked ? `Unlocks at street cred level ${item.need}` : formatMoney(item.price)}</small>`;
           button(
             p,
             label,

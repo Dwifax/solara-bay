@@ -229,8 +229,8 @@ export function createMissionSystem(game) {
     cleanup(false);
     if (m.side) {
       game.economy.addMoney(m.reward.money, 'job');
-      game.economy.addRespect(m.reward.respect);
-      game.ui?.missionPassed(m.title, m.reward.money, m.reward.respect, m.passText);
+      game.economy.addStreetCred(m.reward.streetCred);
+      game.ui?.missionPassed(m.title, m.reward.money, m.reward.streetCred, m.passText);
       events.emit('missionPassed', { mission: m });
       m.onPass?.();
       run = null;
@@ -240,9 +240,9 @@ export function createMissionSystem(game) {
     }
     progress.completed.push(m.id);
     game.economy.addMoney(m.reward.money, 'mission');
-    game.economy.addRespect(m.reward.respect);
+    game.economy.addStreetCred(m.reward.streetCred);
     game.stats.missionsPassed += 1;
-    game.ui?.missionPassed(m.title, m.reward.money, m.reward.respect);
+    game.ui?.missionPassed(m.title, m.reward.money, m.reward.streetCred);
     events.emit('missionPassed', { mission: m });
     run = null;
     cooldown = 6;
@@ -262,8 +262,8 @@ export function createMissionSystem(game) {
     refreshStartMarker();
   }
 
-  events.on('wasted', () => fail('You were wasted.'));
-  events.on('busted', () => fail('You were busted.'));
+  events.on('flatlined', () => fail('You were flatlined.'));
+  events.on('cuffed', () => fail('You were cuffed.'));
 
   function update(dt) {
     cooldown = Math.max(0, cooldown - dt);

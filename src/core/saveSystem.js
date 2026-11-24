@@ -1,5 +1,5 @@
 // Save games in localStorage: three manual slots and an autosave written after every story
-// mission. A save holds progress (missions, money, respect, weapons, shells, cars), the player's
+// mission. A save holds progress (missions, money, street cred, weapons, shells, cars), the player's
 // place and the time of day, and the stats.
 import { MISSIONS } from '../data/missions.js';
 
@@ -26,7 +26,7 @@ export function createSaveSystem(game) {
       savedAt: Date.now(),
       hour: game.tod.state.hour,
       player: { x: pos.x, z: pos.z, health: p.health, armor: p.armor, weapons: p.weapons, current: p.current },
-      economy: { money: game.economy.state.money, respect: game.economy.state.respect, ownedCars: game.economy.state.ownedCars },
+      economy: { money: game.economy.state.money, streetCred: game.economy.state.streetCred, ownedCars: game.economy.state.ownedCars },
       missions: { completed: game.missions.progress.completed.slice() },
       activities: { shellsFound: game.activities.state.shellsFound.slice(), raceIndex: game.activities.state.raceIndex, jobsDone: game.activities.state.jobsDone, racesWon: game.activities.state.racesWon },
       stats: { ...game.stats },

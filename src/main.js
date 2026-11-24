@@ -3,6 +3,7 @@
 import { createGame } from './core/game.js';
 import { startGameLoop, STEP } from './core/gameLoop.js';
 import { createRandom } from './core/random.js';
+import { loadWasmCore, wasmCore } from './core/wasmCore.js';
 
 const canvas = document.getElementById('game');
 const uiRoot = document.getElementById('ui');
@@ -14,7 +15,11 @@ const shot = params.get('shot') ?? hashParams.get('shot');
 // Screenshot scenes use a seeded Math.random so the same frame comes out every time.
 if (shot) Math.random = createRandom(1234).next;
 
+// The Rust/WebAssembly simulation core loads first (the JavaScript fallback runs if it cannot).
+await loadWasmCore({ disabled: params.has('nowasm') || hashParams.has('nowasm') });
+
 const game = createGame(canvas, uiRoot);
+game.core = wasmCore;
 window.__solara = game;
 
 function hideLoading() {
@@ -57,4 +62,5 @@ window.__debugStats = () => ({
   hp: Math.round(game.player.health),
   mission: game.missions.active ? `${game.missions.active.mission.id}#${game.missions.active.stepIndex}` : null,
   money: game.economy.state.money,
+  core: wasmCore.status(),
 });

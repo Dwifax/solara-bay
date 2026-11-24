@@ -142,7 +142,7 @@ export function createSoundEffects(audio) {
       if (!audio.ctx) return;
       [392, 330, 262, 196].forEach((f, i) => tone(audio.sfx, { type: 'sawtooth', from: f, decay: 0.3, level: 0.1, when: i * 0.18 }));
     },
-    wasted() {
+    flatlined() {
       if (!audio.ctx) return;
       tone(audio.sfx, { type: 'sawtooth', from: 220, to: 55, attack: 0.02, decay: 2.2, level: 0.18 });
       noiseHit(audio.sfx, { type: 'lowpass', freq: 400, decay: 1.5, level: 0.4 });
