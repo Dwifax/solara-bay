@@ -6,8 +6,8 @@ export const DISTRICTS = {
     style: 'towers',
     palette: [0xdfe6ea, 0xb9c7d0, 0x9fb4c2, 0xe8dccb, 0x8fa3ad, 0xc9d3d8, 0xf1ece2],
   },
-  oceanDrive: {
-    name: 'Ocean Drive',
+  halcyon: {
+    name: 'Halcyon Strand',
     style: 'deco',
     palette: [0xf7c6c7, 0xfde2b8, 0xbfe6dd, 0xf5f0e1, 0xc8d7f5, 0xf9d5e5, 0xffe8a3, 0xa8e0e6],
   },
@@ -53,7 +53,7 @@ export function districtAt(x, z) {
   if (x > 445) return 'portCalloway';
   if (x > 345) return 'bridge';
   if (z > 312) return 'beach';
-  if (z > 150) return 'oceanDrive';
+  if (z > 150) return 'halcyon';
   if (z < -420) return 'vistaHills';
   if (x < -250) return 'palmetto';
   if (z < -80 && x < 150) return 'meridian';

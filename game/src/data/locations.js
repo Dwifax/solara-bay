@@ -1,5 +1,5 @@
-// Named places on the map: shops, services and where the player wakes up after being wasted or
-// busted. Positions are on the sidewalk in front of each building.
+// Named places on the map: shops, services and where the player wakes up after being flatlined or
+// cuffed. Positions are on the sidewalk in front of each building.
 
 export const LOCATIONS = {
   safehouse: { name: "Sol's Place", x: -150, z: 93, blip: 'home', heading: Math.PI },

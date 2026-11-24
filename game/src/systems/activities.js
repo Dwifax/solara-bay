@@ -1,4 +1,4 @@
-// Things to do between story missions: street races from the Ocean Drive start line (cycling
+// Things to do between story missions: street races from the Halcyon Strand start line (cycling
 // through three circuits), timed courier deliveries from Bayline Couriers, and 24 Golden Shells
 // hidden around the city that pay out when found.
 import { STREET_RACES, RACE_RIVALS, RACE_GRID, GOLDEN_SHELLS, SHELL_REWARD } from '../data/activities.js';
@@ -30,7 +30,7 @@ export function createActivities(game) {
         state.shellsFound.push(i);
         game.stats.shellsFound = state.shellsFound.length;
         game.economy.addMoney(SHELL_REWARD.money);
-        game.economy.addRespect(SHELL_REWARD.respect);
+        game.economy.addStreetCred(SHELL_REWARD.streetCred);
         game.events.emit('pickup', {});
         game.ui?.notify(`Golden Shell ${state.shellsFound.length} of ${GOLDEN_SHELLS.length} found.`);
         if (state.shellsFound.length === GOLDEN_SHELLS.length) {
@@ -84,7 +84,7 @@ export function createActivities(game) {
       id: 'courier',
       title: 'Courier Run',
       kind: 'BAYLINE COURIERS',
-      reward: { money: pay, respect: 60 },
+      reward: { money: pay, streetCred: 60 },
       passText: 'DELIVERED',
       onPass: () => {
         state.jobsDone += 1;

@@ -51,8 +51,8 @@ export function createAudioDirector(game) {
   events.on('wantedEscaped', () => sfx.lostCops());
   events.on('missionPassed', () => sfx.missionPassed());
   events.on('missionFailed', () => sfx.missionFailed());
-  events.on('wasted', () => sfx.wasted());
-  events.on('busted', () => sfx.wasted());
+  events.on('flatlined', () => sfx.flatlined());
+  events.on('cuffed', () => sfx.flatlined());
   events.on('checkpoint', () => sfx.checkpoint());
   events.on('pickup', () => sfx.pickup());
   events.on('cash', () => sfx.cash());

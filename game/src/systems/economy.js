@@ -1,4 +1,4 @@
-// Money, respect and what they buy: respect levels unlock guns at Bayline Arms and cars at
+// Money, street cred and what they buy: street cred levels unlock guns at Bayline Arms and cars at
 // Coastline Motors; Sunset Customs repairs and resprays a car (and shakes a tail if nobody is
 // watching); the safehouse saves the game. Shops open when the player stands at their door.
 import { WEAPONS, WEAPON_ORDER, ARMOR_PRICE } from '../data/weapons.js';
@@ -16,13 +16,13 @@ export const SHOP_POINTS = [
 
 export function createEconomy(game) {
   const { events } = game;
-  const state = { money: 500, respect: 0, ownedCars: [] };
+  const state = { money: 500, streetCred: 0, ownedCars: [] };
   let nearShop = null;
 
   function level() {
     let lvl = 1;
     RESPECT_LEVELS.forEach((l, i) => {
-      if (state.respect >= l.xp) lvl = i + 1;
+      if (state.streetCred >= l.xp) lvl = i + 1;
     });
     return lvl;
   }
@@ -31,7 +31,7 @@ export function createEconomy(game) {
     const lvl = level();
     const cur = RESPECT_LEVELS[lvl - 1];
     const next = RESPECT_LEVELS[lvl] ?? null;
-    return { level: lvl, title: cur.title, xp: state.respect, nextXp: next ? next.xp : cur.xp, progress: next ? (state.respect - cur.xp) / (next.xp - cur.xp) : 1 };
+    return { level: lvl, title: cur.title, xp: state.streetCred, nextXp: next ? next.xp : cur.xp, progress: next ? (state.streetCred - cur.xp) / (next.xp - cur.xp) : 1 };
   }
 
   function addMoney(amount) {
@@ -51,9 +51,9 @@ export function createEconomy(game) {
     return true;
   }
 
-  function addRespect(xp) {
+  function addStreetCred(xp) {
     const before = level();
-    state.respect += xp;
+    state.streetCred += xp;
     const after = level();
     if (after > before) {
       const info = levelInfo();
@@ -65,7 +65,7 @@ export function createEconomy(game) {
   function buyWeapon(id) {
     const def = WEAPONS[id];
     const player = game.player;
-    if (!player.hasWeapon(id) && level() < def.level) return game.ui?.notify(`Requires respect level ${def.level}.`);
+    if (!player.hasWeapon(id) && level() < def.level) return game.ui?.notify(`Requires street cred level ${def.level}.`);
     if (player.hasWeapon(id)) {
       if (!spend(def.ammoPrice)) return;
       player.weapons[id].reserve += def.ammoPack;
@@ -87,7 +87,7 @@ export function createEconomy(game) {
 
   function buyCar(id) {
     const spec = VEHICLES[id];
-    if (level() < spec.level) return game.ui?.notify(`Requires respect level ${spec.level}.`);
+    if (level() < spec.level) return game.ui?.notify(`Requires street cred level ${spec.level}.`);
     if (!spend(spec.price)) return;
     const color = spec.colors[Math.floor(game.rng.next() * spec.colors.length)];
     state.ownedCars.push({ id, color });
@@ -176,7 +176,7 @@ export function createEconomy(game) {
     levelInfo,
     addMoney,
     spend,
-    addRespect,
+    addStreetCred,
     catalog,
     update,
     addShopMarkers,
@@ -185,7 +185,7 @@ export function createEconomy(game) {
     },
     load(data) {
       state.money = data?.money ?? 500;
-      state.respect = data?.respect ?? 0;
+      state.streetCred = data?.streetCred ?? 0;
       state.ownedCars = data?.ownedCars ?? [];
     },
   };

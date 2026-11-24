@@ -1,0 +1,21 @@
+[package]
+name = "solara_core"
+version = "0.1.0"
+edition = "2024"
+description = "Solara Bay simulation core: city layout, collision, routing, traffic and vehicle physics, compiled to WebAssembly"
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "src/lib.rs"
+
+[dependencies]
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+debug = false
+strip = true

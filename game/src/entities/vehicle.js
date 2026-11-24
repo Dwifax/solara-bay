@@ -1,12 +1,15 @@
 // A drivable car: arcade physics (engine curve, braking, reverse, lateral grip that lets go under
 // the handbrake for drifts), collision with buildings using two circles, damage with smoke, fire
-// and explosion, sinking in water. Whoever drives it (player or AI) only sets `controls`.
+// and explosion, sinking in water. Whoever drives it (player or AI) only sets `controls`. The
+// physics runs batched in the Rust core (vehicle_physics.rs) when it is loaded; integrate() here
+// is the JavaScript fallback, and finishStep() applies the results either way.
 import * as THREE from 'three';
 import { createVehicleModel, animateVehicleModel } from './vehicleModels.js';
 import { clamp, damp } from '../core/mathUtils.js';
 import { groundHeight, surfaceHeight, WATER_LEVEL } from '../world/cityLayout.js';
 
 let nextVehicleId = 1;
+const IDLE_CONTROLS = Object.freeze({ throttle: 0, steer: 0, brake: true, handbrake: false });
 const charredMaterial = new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: 1 });
 
 export class Vehicle {
@@ -36,6 +39,10 @@ export class Vehicle {
     this.forwardSpeed = 0;
     this.lateralSpeed = 0;
     this.lastImpact = 0;
+    this.impacts = [];
+    this.accelF = 0;
+    this.groundLevel = 0;
+    this.obstacleIndex = -1;
     this.drifting = false;
     this.roll = 0;
     this.pitch = 0;
@@ -99,18 +106,29 @@ export class Vehicle {
     events.emit('explosion', { x: this.position.x, y: this.position.y + 1, z: this.position.z, radius: 9, source: this });
   }
 
-  /** Step the physics. collision: the static world. */
+  /** The controls the physics obeys this step (a wreck or a sunk car only brakes). */
+  activeControls() {
+    return this.destroyed || this.sunk ? IDLE_CONTROLS : this.controls;
+  }
+
+  /** Step physics, collision and damage. The Rust core batches this in vehicleSystem instead. */
   update(dt, collision, events) {
+    this.integrate(dt, collision);
+    this.finishStep(dt, events);
+  }
+
+  /** JavaScript physics (the fallback for vehicle_physics.rs): engine, grip, yaw, walls, ground. */
+  integrate(dt, collision) {
     this.time += dt;
     const spec = this.spec;
-    const c = this.destroyed || this.sunk ? { throttle: 0, steer: 0, brake: true, handbrake: false } : this.controls;
+    const c = this.activeControls();
     const fx = Math.sin(this.heading);
     const fz = Math.cos(this.heading);
     const rx = -fz;
     const rz = fx;
     let vF = this.vx * fx + this.vz * fz;
     let vR = this.vx * rx + this.vz * rz;
-    const healthFactor = this.health < this.maxHealth * 0.25 ? 0.6 : 1;
+    const healthFactor = this.healthFactor();
 
     // Engine, brakes and drag along the car.
     let accelF = 0;
@@ -149,20 +167,20 @@ export class Vehicle {
     this.vz = fz * vF + rz * vR;
     this.forwardSpeed = vF;
     this.lateralSpeed = vR;
+    this.accelF = accelF;
     this.position.x += this.vx * dt;
     this.position.z += this.vz * dt;
 
     // Static collision with both circles.
     this.lastImpact = 0;
+    this.impacts.length = 0;
     const circles = this.circles();
     for (let k = 0; k < 2; k += 1) {
       const circle = circles[k];
       const res = collision.resolveCircle(circle.x, circle.z, this.radius, this.position.y);
       if (!res.hit) continue;
-      const pushX = res.x - circle.x;
-      const pushZ = res.z - circle.z;
-      this.position.x += pushX;
-      this.position.z += pushZ;
+      this.position.x += res.x - circle.x;
+      this.position.z += res.z - circle.z;
       const vn = this.vx * res.nx + this.vz * res.nz;
       if (vn < 0) {
         this.vx -= res.nx * vn * 1.3;
@@ -173,25 +191,89 @@ export class Vehicle {
         this.lastImpact = Math.max(this.lastImpact, impact);
         // A glancing hit at the front turns the car away from the wall.
         this.yawRate += (k === 0 ? 1 : -1) * (res.nx * fz - res.nz * fx) * impact * 0.05;
-        if (impact > 5) {
-          this.damage((impact - 6) * (impact - 6) * 0.45, events, this.driver === 'player' ? 'player-crash' : null);
-          events.emit('vehicleImpact', { vehicle: this, impact, x: circle.x, z: circle.z });
-        }
+        this.impacts.push(impact, circle.x, circle.z);
       }
     }
 
     // Ground and water.
     const ground = groundHeight(this.position.x, this.position.z);
+    this.groundLevel = ground;
     if (ground < WATER_LEVEL - 0.6) {
       this.position.y += (Math.max(ground, WATER_LEVEL - 1.6) - this.position.y) * damp(1.2, dt);
       this.vx *= 1 - damp(1.5, dt);
       this.vz *= 1 - damp(1.5, dt);
-      if (!this.sunk && this.position.y < WATER_LEVEL - 0.3) {
-        this.sunk = true;
-        events.emit('vehicleSunk', { vehicle: this });
-      }
     } else {
       this.position.y += (surfaceHeight(this.position.x, this.position.z) - this.position.y) * damp(18, dt);
+    }
+  }
+
+  healthFactor() {
+    return this.health < this.maxHealth * 0.25 ? 0.6 : 1;
+  }
+
+  /** Write this car into a row of the vehicle_physics.rs exchange buffer. */
+  packRow(io, o) {
+    const c = this.activeControls();
+    const spec = this.spec;
+    io[o] = this.position.x;
+    io[o + 1] = this.position.y;
+    io[o + 2] = this.position.z;
+    io[o + 3] = this.heading;
+    io[o + 4] = this.vx;
+    io[o + 5] = this.vz;
+    io[o + 6] = this.yawRate;
+    io[o + 7] = this.steer;
+    io[o + 8] = c.throttle;
+    io[o + 9] = c.steer;
+    io[o + 10] = c.brake ? 1 : 0;
+    io[o + 11] = c.handbrake ? 1 : 0;
+    io[o + 12] = spec.accel;
+    io[o + 13] = spec.brake;
+    io[o + 14] = spec.maxSpeed;
+    io[o + 15] = spec.grip;
+    io[o + 16] = spec.steer;
+    io[o + 17] = spec.length;
+    io[o + 18] = this.radius;
+    io[o + 19] = this.healthFactor();
+    io[o + 20] = spec.mass;
+  }
+
+  /** Read this car's stepped state back from its row. */
+  unpackRow(io, o, dt) {
+    this.time += dt;
+    this.position.x = io[o];
+    this.position.y = io[o + 1];
+    this.position.z = io[o + 2];
+    this.heading = io[o + 3];
+    this.vx = io[o + 4];
+    this.vz = io[o + 5];
+    this.yawRate = io[o + 6];
+    this.steer = io[o + 7];
+    this.forwardSpeed = io[o + 22];
+    this.lateralSpeed = io[o + 23];
+    this.accelF = io[o + 24];
+    this.impacts.length = 0;
+    if (io[o + 25] > 0) this.impacts.push(io[o + 25], io[o + 26], io[o + 27]);
+    if (io[o + 28] > 0) this.impacts.push(io[o + 28], io[o + 29], io[o + 30]);
+    this.drifting = io[o + 31] === 1;
+    this.groundLevel = io[o + 32];
+    this.lastImpact = io[o + 33];
+  }
+
+  /** After the physics: crash damage, sinking, the fire countdown, body roll and the model. */
+  finishStep(dt, events) {
+    const c = this.activeControls();
+    const vF = this.forwardSpeed;
+    for (let k = 0; k < this.impacts.length; k += 3) {
+      const impact = this.impacts[k];
+      if (impact > 5) {
+        this.damage((impact - 6) * (impact - 6) * 0.45, events, this.driver === 'player' ? 'player-crash' : null);
+        events.emit('vehicleImpact', { vehicle: this, impact, x: this.impacts[k + 1], z: this.impacts[k + 2] });
+      }
+    }
+    if (!this.sunk && this.groundLevel < WATER_LEVEL - 0.6 && this.position.y < WATER_LEVEL - 0.3) {
+      this.sunk = true;
+      events.emit('vehicleSunk', { vehicle: this });
     }
 
     // Fire countdown once wrecked.
@@ -202,7 +284,7 @@ export class Vehicle {
 
     // Body roll and pitch for feel.
     const targetRoll = clamp(this.yawRate * vF * 0.006, -0.09, 0.09);
-    const targetPitch = clamp(-accelF * 0.0035, -0.05, 0.05);
+    const targetPitch = clamp(-this.accelF * 0.0035, -0.05, 0.05);
     this.roll += (targetRoll - this.roll) * damp(6, dt);
     this.pitch += (targetPitch - this.pitch) * damp(6, dt);
     this.syncTransform();

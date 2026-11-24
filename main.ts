@@ -7,7 +7,7 @@
 // What is in game/src: a seeded city generator (districts, street grid, bridges, beach, docks,
 // hills, landmarks), a third-person player and arcade-physics cars, traffic and pedestrian AI,
 // a 1-5 star wanted system with pursuit cars, roadblocks and a helicopter, guns and fists,
-// nine story missions plus street races, courier jobs and collectibles, shops and respect
+// nine story missions plus street races, courier jobs and collectibles, shops and streetCred
 // levels, a rotating radar and full map, menus with save slots, and WebAudio sound with a
 // procedurally composed three-station radio.
 //

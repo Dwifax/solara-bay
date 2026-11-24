@@ -3,7 +3,7 @@
 // From three stars roadblocks close streets ahead, from four the helicopter circles with its
 // searchlight. Without a wanted level a few patrol cars drive with traffic.
 import { LaneDriver } from './laneDriver.js';
-import { findRoute, lanePoint } from './roadNavigation.js';
+import { planPursuitRoute, lanePoint } from './roadNavigation.js';
 import { nearestNode, nearestRoadPoint } from '../world/cityLayout.js';
 import { OUTFITS } from '../entities/pedestrian.js';
 import { Helicopter } from '../entities/helicopter.js';
@@ -69,17 +69,13 @@ class PursuitDriver {
       desiredSpeed = pv ? Math.max(14, pv.speed + 8 * this.aggression) : Math.min(14, d * 0.6);
     } else {
       this.repath -= dt;
-      const goal = nearestNode(game.city.network, goalX, goalZ);
-      if (!this.route || (this.repath <= 0 && goal !== this.goalNode)) {
+      if (!this.route || (this.repath <= 0 && nearestNode(game.city.network, goalX, goalZ) !== this.goalNode)) {
         this.repath = 3;
-        this.goalNode = goal;
         // Route from the junction ahead on the street we are on, never one behind us.
-        const road = nearestRoadPoint(game.city.network, v.position.x, v.position.z);
-        const e = road.edge;
         const f = v.forward();
-        const aheadB = (e.b.x - v.position.x) * f.x + (e.b.z - v.position.z) * f.z;
-        const start = aheadB > 0 ? e.b : e.a;
-        this.route = findRoute(game.city.network, start, goal);
+        const plan = planPursuitRoute(game.city.network, v.position.x, v.position.z, f.x, f.z, goalX, goalZ);
+        this.goalNode = plan.goal;
+        this.route = plan.route;
         this.routeIndex = 0;
       }
       if (this.route && this.route.length > 0) {

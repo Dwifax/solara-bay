@@ -276,7 +276,7 @@ export const STEP_HANDLERS = {
       s.target = v;
       s.hunters = [];
       for (let i = 0; i < (step.hunters ?? 0); i += 1) {
-        const h = ctx.spawnVehicle({ car: 'marlin', color: 0x101010, x: t.x - Math.sin(t.heading) * (10 + i * 8), z: t.z - Math.cos(t.heading) * (10 + i * 8), heading: t.heading, tag: null });
+        const h = ctx.spawnVehicle({ car: 'heron', color: 0x101010, x: t.x - Math.sin(t.heading) * (10 + i * 8), z: t.z - Math.cos(t.heading) * (10 + i * 8), heading: t.heading, tag: null });
         h.driver = new HunterDriver(h, game);
         ctx.blip(h, 'enemy-car');
         s.hunters.push(h);

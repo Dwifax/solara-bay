@@ -18,7 +18,7 @@ window.__auto = function () {
   };
   const ensureCar = () => {
     if (p.vehicle) return p.vehicle;
-    const v = g.vehicleSystem.spawn('marlin', p.position.x + 3, p.position.z, 0);
+    const v = g.vehicleSystem.spawn('heron', p.position.x + 3, p.position.z, 0);
     g.controller.enterVehicle(v);
     return v;
   };
@@ -76,7 +76,7 @@ try {
   }
   // Side activities.
   await browser.evaluate(`(() => { const g = window.__solara; const v = g.vehicleSystem.spawn('brawler', -300, 300, Math.PI/2); g.controller.enterVehicle(v); return 1; })()`);
-  await browser.evaluate(`(() => { const g = window.__solara; g.missions.startSide({ id: 'race-test', title: 'Test Race', reward: { money: 10, respect: 1 }, steps: [{ type: 'race', grid: { x: -300, z: 305.2, heading: Math.PI/2 }, countdown: 1, rivals: [{ car: 'vento', color: 0, x: -300, z: 301.6, skill: 1 }], checkpoints: [[-100, 300], [100, 300]], text: 'race' }] }); return 1; })()`);
+  await browser.evaluate(`(() => { const g = window.__solara; g.missions.startSide({ id: 'race-test', title: 'Test Race', reward: { money: 10, streetCred: 1 }, steps: [{ type: 'race', grid: { x: -300, z: 305.2, heading: Math.PI/2 }, countdown: 1, rivals: [{ car: 'vireo', color: 0, x: -300, z: 301.6, skill: 1 }], checkpoints: [[-100, 300], [100, 300]], text: 'race' }] }); return 1; })()`);
   for (let i = 0; i < 40; i += 1) {
     const st = await browser.evaluate('window.__auto()');
     if (st === 'idle') break;
@@ -84,7 +84,7 @@ try {
   }
   console.log('race done', await browser.evaluate('JSON.stringify(window.__debugStats())'));
   // Shops and saving.
-  await browser.evaluate(`(() => { const g = window.__solara; g.economy.addMoney(100000); g.economy.addRespect(20000); g.controller.exitVehicle(true); for (const item of g.economy.catalog('guns')) item.action(); for (const item of g.economy.catalog('cars')) item.action(); g.saveSystem.save('1'); return 1; })()`);
+  await browser.evaluate(`(() => { const g = window.__solara; g.economy.addMoney(100000); g.economy.addStreetCred(20000); g.controller.exitVehicle(true); for (const item of g.economy.catalog('guns')) item.action(); for (const item of g.economy.catalog('cars')) item.action(); g.saveSystem.save('1'); return 1; })()`);
   await delay(500);
   console.log('weapons', await browser.evaluate('JSON.stringify(Object.keys(window.__solara.player.weapons))'));
   await browser.evaluate(`window.__solara.flow.loadSlot('1'); 1`);
@@ -96,7 +96,7 @@ try {
   console.log('5 stars', await browser.evaluate('JSON.stringify(window.__debugStats())'), await browser.evaluate('window.__solara.vehicles.filter(v => v.isPolice).length + " cop cars, heli " + !!window.__solara.police.helicopter'));
   await browser.evaluate(`(() => { const g = window.__solara; g.player.takeDamage(500); return 1; })()`);
   await delay(6000);
-  console.log('after wasted', await browser.evaluate('JSON.stringify(window.__debugStats())'));
+  console.log('after flatlined', await browser.evaluate('JSON.stringify(window.__debugStats())'));
 } catch (err) {
   console.log('PLAYTEST ERROR', err.message);
 } finally {

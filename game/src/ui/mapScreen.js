@@ -8,7 +8,7 @@ import { GOLDEN_SHELLS } from '../data/activities.js';
 
 const LABELS = [
   ['meridian', -50, -300],
-  ['oceanDrive', -150, 250],
+  ['halcyon', -150, 250],
   ['littleCoral', 50, 40],
   ['palmetto', -400, -200],
   ['vistaHills', -150, -460],

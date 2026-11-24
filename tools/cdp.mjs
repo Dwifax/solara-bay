@@ -43,8 +43,13 @@ export async function launchBrowser({ width = 1280, height = 720, port = 9333, g
     'about:blank',
   ];
   const proc = spawn(CHROME, args, { stdio: 'ignore' });
-  const targets = await fetchJson(`http://127.0.0.1:${port}/json/list`);
-  const page = targets.find((t) => t.type === 'page');
+  let page = null;
+  for (let tries = 0; !page && tries < 40; tries += 1) {
+    const targets = await fetchJson(`http://127.0.0.1:${port}/json/list`);
+    page = targets.find((t) => t.type === 'page');
+    if (!page) await delay(250);
+  }
+  if (!page) throw new Error('Chrome opened no page target');
   const ws = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => {
     ws.onopen = resolve;

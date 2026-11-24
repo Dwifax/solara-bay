@@ -1,6 +1,6 @@
 [
   { "name": "1-police-chase.jpg", "query": "?shot=chase" },
-  { "name": "2-ocean-drive.jpg", "query": "?shot=onfoot" },
+  { "name": "2-halcyon-strand.jpg", "query": "?shot=onfoot" },
   { "name": "3-dock-shootout.jpg", "query": "?shot=shootout" },
   { "name": "4-title.jpg", "query": "?shot=title" }
 ]

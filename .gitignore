@@ -1,3 +1,4 @@
 out/
 out2/
 node_modules/
+rust/solara_core/target/

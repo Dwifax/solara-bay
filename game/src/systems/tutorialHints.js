@@ -1,5 +1,5 @@
 // One-time help for new players: each hint appears the first time its situation comes up
-// (near a car, first drive, first gun, first wanted level, first wasted...) and never again in
+// (near a car, first drive, first gun, first wanted level, first flatlined...) and never again in
 // that game.
 
 const HINTS = {
@@ -9,7 +9,7 @@ const HINTS = {
   wanted: 'The cops are on you. Break line of sight and get out of the <span class="hl">search circle</span> on the radar to lose them.',
   stars3: 'Three stars: expect <span class="hl">roadblocks</span>. Four brings the helicopter.',
   map: 'Press <b>M</b> for the map. Click it to set a waypoint and the radar will route you there.',
-  shop: 'Earn respect to unlock guns at <span class="hl">Bayline Arms</span> and cars at <span class="hl">Coastline Motors</span>.',
+  shop: 'Earn street cred to unlock guns at <span class="hl">Bayline Arms</span> and cars at <span class="hl">Coastline Motors</span>.',
   fire: 'Wrecked cars catch fire. Bail out with <b>F</b> before they blow!',
 };
 

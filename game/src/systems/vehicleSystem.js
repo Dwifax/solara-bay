@@ -2,6 +2,7 @@
 // damage) and cars running into people (knock-downs and injuries).
 import { Vehicle } from '../entities/vehicle.js';
 import { VEHICLES } from '../data/vehicles.js';
+import { wasmCore } from '../core/wasmCore.js';
 
 export function createVehicleSystem(game) {
   const { events, scene } = game;
@@ -108,9 +109,37 @@ export function createVehicleSystem(game) {
     }
   }
 
+  /** Every car's physics and car-to-car crashes in one pass through vehicle_physics.rs. */
+  function stepNative(dt) {
+    const list = game.vehicles;
+    const n = list.length;
+    const stride = wasmCore.VEHICLE_STRIDE;
+    let io = wasmCore.vehicleRows(n);
+    for (let k = 0; k < n; k += 1) list[k].packRow(io, k * stride);
+    wasmCore.stepVehicles(n, dt);
+    const crashes = wasmCore.collideVehicles(n);
+    io = wasmCore.crashRows(n, crashes);
+    for (let k = 0; k < n; k += 1) list[k].unpackRow(io, k * stride, dt);
+    // Copy the crash rows out before damage events can call back into the core.
+    const base = n * stride;
+    const rows = Array.from(io.subarray(base, base + crashes * wasmCore.CRASH_STRIDE));
+    for (const v of list) v.finishStep(dt, events);
+    for (let c = 0; c < rows.length; c += wasmCore.CRASH_STRIDE) {
+      const a = list[rows[c]];
+      const b = list[rows[c + 1]];
+      const impact = rows[c + 2];
+      a.damage(impact * impact * 0.7 * rows[c + 3], events, a.driver === 'player' ? 'player-crash' : null);
+      b.damage(impact * impact * 0.7 * rows[c + 4], events, b.driver === 'player' ? 'player-crash' : null);
+      events.emit('vehicleCollision', { a, b, impact, x: rows[c + 5], z: rows[c + 6] });
+    }
+  }
+
   function update(dt) {
-    for (const v of game.vehicles) v.update(dt, game.city.collision, events);
-    collideVehicles();
+    if (wasmCore.ready) stepNative(dt);
+    else {
+      for (const v of game.vehicles) v.update(dt, game.city.collision, events);
+      collideVehicles();
+    }
     collidePeople();
   }
 

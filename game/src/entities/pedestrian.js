@@ -2,6 +2,7 @@
 // and drivers. Holds body state (health, knock-downs from cars, death) and low-level movement;
 // what they decide to do lives in the AI systems.
 import * as THREE from 'three';
+import { wasmCore, crowdResult } from '../core/wasmCore.js';
 import { createHumanoid, animateHumanoid, SKIN_TONES, HAIR_COLORS, SHIRT_COLORS, PANTS_COLORS } from './humanoidModel.js';
 import { createWeaponMesh } from './weaponModels.js';
 import { angleDelta, damp } from '../core/mathUtils.js';
@@ -58,6 +59,19 @@ export class Pedestrian {
 
   /** Walk or run toward (x, z); returns the remaining distance. */
   moveToward(x, z, speed, dt, collision) {
+    if (wasmCore.ready) {
+      // Steering and wall collision in one call to traffic.rs.
+      const d = wasmCore.walkToward(this.position.x, this.position.z, this.heading, x, z, speed, dt, 0.32, this.position.y);
+      if (d < 0.05) {
+        this.speed = 0;
+        return d;
+      }
+      this.position.x = crowdResult.x;
+      this.position.z = crowdResult.z;
+      this.heading = crowdResult.heading;
+      this.speed = speed;
+      return d;
+    }
     const dx = x - this.position.x;
     const dz = z - this.position.z;
     const d = Math.hypot(dx, dz);

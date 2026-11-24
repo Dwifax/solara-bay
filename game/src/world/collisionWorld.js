@@ -1,13 +1,17 @@
 // Static collision for the city: every building, wall and big prop is an axis-aligned box kept in
 // a spatial hash. Circles (people, cars) are pushed out of boxes, and rays (bullets, the camera,
-// police line of sight) are cast against them.
+// police line of sight) are cast against them. With the Rust core loaded the boxes live in
+// collision.rs and every query runs there; this file's hash is the JavaScript fallback.
+import { wasmCore } from '../core/wasmCore.js';
 
 const CELL = 16;
 
 export function createCollisionWorld() {
+  const native = wasmCore.ready;
   const cells = new Map();
   const boxes = [];
   let stamp = 1;
+  if (native) wasmCore.collisionReset();
 
   function cellKey(cx, cz) {
     return cx * 73856093 ^ cz * 19349663;
@@ -16,6 +20,10 @@ export function createCollisionWorld() {
   function addBox(minX, maxX, minZ, maxZ, maxY = 50, minY = -10, kind = 'building') {
     const box = { minX, maxX, minZ, maxZ, minY, maxY, kind, mark: 0 };
     boxes.push(box);
+    if (native) {
+      box.id = wasmCore.addBox(minX, maxX, minZ, maxZ, minY, maxY);
+      return box;
+    }
     for (let cx = Math.floor(minX / CELL); cx <= Math.floor(maxX / CELL); cx += 1) {
       for (let cz = Math.floor(minZ / CELL); cz <= Math.floor(maxZ / CELL); cz += 1) {
         const key = cellKey(cx, cz);
@@ -160,7 +168,18 @@ export function createCollisionWorld() {
     return false;
   }
 
-  return { addBox, resolveCircle, raycast, lineClear, pointBlocked, nearbyBoxes, boxes };
+  if (native) {
+    return {
+      addBox,
+      resolveCircle: (x, z, r, footY = 0) => wasmCore.resolveCircle(x, z, r, footY),
+      raycast: wasmCore.raycast,
+      lineClear: wasmCore.lineClear,
+      pointBlocked: (x, z, margin = 0) => wasmCore.pointBlocked(x, z, margin),
+      boxes,
+      native,
+    };
+  }
+  return { addBox, resolveCircle, raycast, lineClear, pointBlocked, nearbyBoxes, boxes, native };
 }
 
 /** Slab test of a ray against a box; returns entry distance or Infinity. */

@@ -1,4 +1,4 @@
-// Weapon definitions: damage, fire rate, magazine, spread, range, the shop price and the respect
+// Weapon definitions: damage, fire rate, magazine, spread, range, the shop price and the street cred
 // level that unlocks them at Bayline Arms. Slot order matches the number keys 1-5.
 
 export const WEAPONS = {

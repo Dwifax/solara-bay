@@ -1,5 +1,5 @@
 // Fills each city block with buildings in its district's style (glass towers downtown, pastel
-// deco hotels on Ocean Drive, mid-rises in Little Coral, houses and villas, warehouses and
+// deco hotels on Halcyon Strand, mid-rises in Little Coral, houses and villas, warehouses and
 // container yards) and records each as a box for rendering and collision.
 import { DISTRICTS, districtAt } from '../data/districts.js';
 import { hash2 } from '../core/random.js';
@@ -155,7 +155,7 @@ function buildDeco(block, out, palette, h, rng) {
       const faceZ = iz === 2 ? 1 : iz === 0 ? -1 : 0;
       const faceX = ix === 2 ? 1 : ix === 0 ? -1 : 0;
       if (faceZ === 1 && height > 11) {
-        // Hotels on Ocean Drive carry their name in neon on the street front.
+        // Hotels on Halcyon Strand carry their name in neon on the street front.
         out.neonSigns.push({ text: HOTEL_NAMES[out.neonSigns.length % HOTEL_NAMES.length], x: cx, y: height - 2.2, z: cz + d / 2 + 0.12, w: Math.min(w - 2, 11), h: 2.2, rotY: 0, color: rng.pick(NEON_SIGN_COLORS) });
         pushBox(out.plain, cx, cz + d / 2 + 0.3, w * 0.9, 0.35, 0.5, 0xffffff, height * 0.35, false);
         pushBox(out.plain, cx, cz + d / 2 + 0.3, w * 0.9, 0.35, 0.5, 0xffffff, height * 0.6, false);
